@@ -10,7 +10,7 @@ let handler = async (m, { conn, text }) => {
 
   // If no key and text provided, show all styles of a default text
   if (words.length === 0 || !key || !textToStyle) {
-    let defaultText = 'GURU BOT';
+    let defaultText = 'Fancy';
     let styledTexts = await Promise.all([...Array(34).keys()].map(i => stylizeText(defaultText, i + 1)));
     conn.reply(m.chat, styledTexts.join`\n\n`, m);
     return;
@@ -27,7 +27,7 @@ let handler = async (m, { conn, text }) => {
   conn.reply(m.chat, styledText, m);
 }
 
-handler.help = ['style'].map(v => v + ' <key> <text>');
+handler.help = ['fancy'].map(v => v + ' <key> <text>');
 handler.tags = ['tools'];
 handler.command = /^(fancy)$/i;
 handler.exp = 0;
