@@ -11,12 +11,16 @@ let handler = async (m, { conn, text, args, usedPrefix, command }) => {
 
     const prompt = text;
 
+    // Send a message before editing
+    const preEditMsg = await conn.sendMessage(m.chat, 'Cooking up a response... 🍳');
+
     const result = await model.generateContent(prompt);
     const response = result.response;
     const generatedText = response.text();
 
     await conn.relayMessage(m.chat, {
       protocolMessage: {
+        key: preEditMsg.key,
         type: 14,
         editedMessage: {
           conversation: generatedText
