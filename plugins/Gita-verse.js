@@ -13,7 +13,7 @@ let gitaVerseHandler = async (m, { conn }) => {
 
     if (!res.ok) {
       let error = await res.json(); 
-      throw new Error(`API request failed with status ${res.status} and message ${error.detail[0].msg}`);
+      throw new Error(`Oops! Something went wrong. Unable to fetch the verse.`);
     }
 
     let json = await res.json();
@@ -32,13 +32,12 @@ ${json.purport}`;
 
     m.reply(gitaVerse);
 
-   
     if (json.audio_link) {
       conn.sendFile(m.chat, json.audio_link, 'audio.mp3', null, m, true, { type: 'audioMessage', ptt: true });
     }
   } catch (error) {
     console.error(error);
-    // Handle the error appropriately
+    m.reply(`❎ Oops! Something went wrong. Unable to fetch the verse.`);
   }
 };
 
@@ -47,4 +46,3 @@ gitaVerseHandler.tags = ['religion'];
 gitaVerseHandler.command = ['gita', 'verse']
 
 export default gitaVerseHandler;
-
