@@ -32,40 +32,31 @@ let quranSurahHandler = async (m, { conn }) => {
 
     let json = await res.json();
 
-    // Translate tafsir from Bahasa Indonesia to Urdu
-    let translatedTafsirUrdu = await translate(json.data.tafsir.id, { to: 'ur', autoCorrect: true });
-
-    // Translate tafsir from Bahasa Indonesia to English
-    let translatedTafsirEnglish = await translate(json.data.tafsir.id, { to: 'en', autoCorrect: true });
-
     let quranSurah = `
 🕌 *Quran: The Holy Book*\n
 📜 *Surah ${json.data.number}: ${json.data.asma.ar.long} (${json.data.asma.en.long})*\n
 Type: ${json.data.type.en}\n
 Number of verses: ${json.data.ayahCount}\n
-🔮 *Explanation (Urdu):*\n
-${translatedTafsirUrdu.text}\n
-🔮 *Explanation (English):*\n
-${translatedTafsirEnglish.text}`;
+🔮 *Explanation:*\n
+${json.data.tafsir.en}`;
 
     m.reply(quranSurah);
 
     if (json.data.recitation.full) {
       conn.sendFile(m.chat, json.data.recitation.full, 'recitation.mp3', null, m, true, { type: 'audioMessage', ptt: true });
     }
+
+    m.react('📖'); // Reaction for success
+
   } catch (error) {
     console.error(error);
     m.reply(`Error: ${error.message}`);
+    m.react('🤦🏻‍♀️'); // Reaction for error
   }
 };
 
-quranSurahHandler.help = ['quran [surah_number|surah_name]'];
+quranSurahHandler.help = ['quran [number|name]'];
 quranSurahHandler.tags = ['quran', 'surah'];
-quranSurahHandler.command = ['quran', 'surah']
+quranSurahHandler.command = ['quran', 'surah'];
 
 export default quranSurahHandler;
-
-  
-  
-  
-  
