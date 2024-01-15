@@ -9,18 +9,33 @@ const handler = async (m, { text, usedPrefix }) => {
 
     m.react('⏳'); 
 
-    const searchQuery = encodeURIComponent(text.toLowerCase()); 
-    const apiUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&list=search&utf8=1&srsearch=${searchQuery}`;
+    const searchQuery = encodeURIComponent(text.toLowerCase()); // Make the search case-insensitive
+    const variations = [
+      encodeURIComponent(text), // Original query
+      encodeURIComponent(text.replace(/\s+/g, '')), // Remove spaces
+      encodeURIComponent(text.replace(/\s+/g, '').toLowerCase()), // Remove spaces and make lowercase
+    ];
 
-    const response = await fetch(apiUrl);
-    const result = await response.json();
+    let result = null;
 
-    if (!result.query || !result.query.search || result.query.search.length === 0) {
+    for (const variation of variations) {
+      const apiUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&list=search&utf8=1&srsearch=${variation}`;
+
+      const response = await fetch(apiUrl);
+      const apiResult = await response.json();
+
+      if (apiResult.query && apiResult.query.search && apiResult.query.search.length > 0) {
+        result = apiResult.query.search[0];
+        break; // Stop searching when a result is found
+      }
+    }
+
+    if (!result) {
       m.react('👀'); 
       throw 'Oops! No Wikipedia entry found for that query. Maybe try searching for something more mysterious? 🧐';
     }
 
-    const { title, snippet } = result.query.search[0];
+    const { title, snippet } = result;
     const articleUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`;
     const imageUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=pageimages&titles=${encodeURIComponent(title)}&pithumbsize=300`;
 
@@ -53,4 +68,4 @@ handler.tags = ['search'];
 handler.command = /^(wiki|wikipedia)$/i;
 
 export default handler;
-	    
+		
