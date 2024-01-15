@@ -1,24 +1,24 @@
-import fetch from 'node-fetch';
-
 const handler = async (m, { conn }) => {
   try {
-    const res = await fetch('https://some-random-api.com/animu/quote');
-    if (!res.ok) throw await res.text();
-    const json = await res.json();
-    const { sentence, character, anime } = json;
+    m.react('😄'); 
 
-    const message = `❖𝐐𝐔𝐎𝐓𝐄\n${sentence}\n\n❖𝐂𝐇𝐀𝐑𝐀𝐂𝐓𝐄𝐑: \`\`\`${character}\`\`\`\n❖𝐀𝐍𝐈𝐌𝐄: \`\`\`${anime}\`\`\`\n`;
+    const res = await fetch('https://some-random-api.com/animu/quote');
+    if (!res.ok) throw 'Failed to fetch anime quote.';
+
+    const { sentence, character, anime } = await res.json();
+
+    const message = `📜 *Anime Quote:*\n${sentence}\n\n👤 *Character:*\n\`${character}\`\n🐶 *Anime:*\n\`${anime}\``;
     conn.sendMessage(m.chat, { text: message }, 'extendedTextMessage', { quoted: m });
   } catch (error) {
     console.error(error);
+
+    m.react('🥺'); //
+    m.reply('😅 Oops! The anime quote is taking a break. Please try again later.');
   }
 };
 
 handler.help = ['animequote'];
-handler.tags = ['group'];
+handler.tags = ['fun', 'anime'];
 handler.command = /^(animequote)$/i;
 
 export default handler;
-
-
-
