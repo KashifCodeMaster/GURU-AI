@@ -812,8 +812,7 @@ export async function presenceUpdate(presenceUpdate) {
 /**
 dfail
  */
-global.dfail = (type, m, conn) => {
-    const userTag = `👋 Hai *@${m.sender.split("@")[0]}*, `
+global.dfail = (type, m, conn, usedPrefix) => {
     const emoji = {
         general: '⚙️',
         owner: '👑',
@@ -830,31 +829,72 @@ global.dfail = (type, m, conn) => {
     }
 
     const msg = {
-        owner: `*${emoji.owner} Owner's Query*\n
-    ${userTag} This command can only be used by the *Bot Owner*!`,
-        moderator: `*${emoji.moderator} Moderator's Query*\n
-    ${userTag} This command can only be used by *Moderators*!`,
-        premium: `*${emoji.premium} Premium Query*\n
-    ${userTag} This command is only for *Premium Members*!`,
-        group: `*${emoji.group} Group Query*\n
-    ${userTag} This command can only be used in *Group Chats*!`,
-        private: `*${emoji.private} Private Query*\n
-    ${userTag} This command can only be used in *Private Chats*!`,
-        admin: `*${emoji.admin} Admin's Query*\n
-    ${userTag} This command is only for *Group Admins*!`,
-        botAdmin: `*${emoji.botAdmin} Bot Admin's Query*\n
-    ${userTag} Make the bot an *Admin* to use this command!`,
-        unreg: `*${emoji.unreg} Registration Query*\n
-    ${userTag} Please register to use this feature by typing:\n\n*#register name.age*\n\nExample: *#register ${m.name}.18*!`,
-        nsfw: `*${emoji.nsfw} NSFW Query*\n
-    ${userTag} NSFW is not active. Please contact the Group admin to enable this feature!`,
-        restrict: `*${emoji.restrict} Inactive Feature Query*\n
-    ${userTag} This feature is *disabled*!`,
+        owner: [
+            `*${emoji.owner} Whoops, wrong portal!* 🚨\nOnly accessible by the robot's operator!`,
+            `*${emoji.owner} Heads up! Wrong alley!* 😬\nThis one's for the operator, not wanderers!`,
+            `*${emoji.owner} Warning! Operator zone!* ⚠️\nYou're not the captain of this ship!`,
+            `*${emoji.owner} Captain's Log:* 📜\nUnauthorized entry detected! Operator only, please.`,
+        ],
+        moderator: [
+            `*${emoji.moderator} Hold on, wrong arena!* 🏟️\nReserved for the moderators! Try a different field!`,
+            `*${emoji.moderator} Oopsie daisy!* 🌼\nThis path is strictly for the guardians of order!`,
+            `*${emoji.moderator} Wrong stage, buddy!* 🎤\nThe moderators have exclusive access here!`,
+            `*${emoji.moderator} Order Alert!* 🚓\nUnauthorized access – moderators only zone!`,
+        ],
+        premium: [
+            `*${emoji.premium} Members Only!* 💎\nAccess denied! This feature is exclusively for the premium squad.`,
+            `*${emoji.premium} VIP Club Alert!* 🚧\nSorry, premium members only. The velvet rope is up!`,
+            `*${emoji.premium} Premium Access Needed!* 🌟\nThis one's for the premium crowd, not for the masses!`,
+            `*${emoji.premium} Velvet Rope Activated!* 🚫\nPremium members, welcome. Others, access denied!`,
+        ],
+        group: [
+            `*${emoji.group} Groupies Only!* 👥\nExclusive group command! You need a backstage pass to use this!`,
+            `*${emoji.group} Restricted Area!* ⛔\nThis command is off-limits for non-groupies!`,
+            `*${emoji.group} Keep Out, Non-Groupies!* 🚫\nOnly for those with a group ticket!`,
+            `*${emoji.group} VIP Lounge!* 🍸\nAccess granted only to the groupies. Others, find a different party!`,
+        ],
+        private: [
+            `*${emoji.private} Private Party Time!* 📱\nYou've stumbled into a private chat zone!`,
+            `*${emoji.private} Keep It Hush-Hush!* 🤐\nThis command is for one-on-one moments!`,
+            `*${emoji.private} Private Territory!* 🏡\nNot for public use, this is a private affair!`,
+            `*${emoji.private} Confidential Zone!* 🔐\nRestricted access, private conversations only!`,
+        ],
+        admin: [
+            `*${emoji.admin} Admin Zone!* 👤\nProceed with caution, only for the chosen ones - the group admins!`,
+            `*${emoji.admin} Red Alert!* 🚨\nThis area is under admin supervision!`,
+            `*${emoji.admin} Unauthorized Zone!* ⚠️\nAdmin access required for this passage!`,
+            `*${emoji.admin} Secure Area!* 🔒\nRestricted entry – admin eyes only!`,
+        ],
+        botAdmin: [
+            `*${emoji.botAdmin} I'm Not In Charge Here!*\nMake me an admin first! 🤖`,
+            `*${emoji.botAdmin} Alert! Permission Denied!* 🚫\nAdmin status required for this command!`,
+            `*${emoji.botAdmin} Unauthorized Access!* 🤖\nThis command needs bot admin clearance!`,
+            `*${emoji.botAdmin} Admin Override Needed!* 🛡️\nBot admin access required – no shortcuts!`,
+        ],
+        unreg: [
+            `*${emoji.unreg} Registration Required!* 🔒\nHold on, cowboy! You need to register first. Use *${usedPrefix}register name.age.gender*!`,
+            `*${emoji.unreg} Time to Sign Up!* ✍️\nNo entry without proper registration. Give *${usedPrefix}register* a shot!`,
+            `*${emoji.unreg} Sign Up First!* 📝\nRegistration is the key to unlock this feature! Use *${usedPrefix}register* to register.`,
+            `*${emoji.unreg} Membership Required!* 🚪\nOnly registered users are allowed here. Join the club by using *${usedPrefix}register*`,
+        ],
+        nsfw: [
+            `*${emoji.nsfw} NSFW Alert!* 🔞\nWarning! NSFW is inactive. Talk to the group admin to spice things up!`,
+            `*${emoji.nsfw} Sensual Content Alert!* 💋\nNSFW is on vacation. Request some excitement from the group admin!`,
+            `*${emoji.nsfw} Adult Content Warning!* 🚨\nSorry, this zone is currently family-friendly!`,
+            `*${emoji.nsfw} Spice It Up Request!* 🌶️\nNSFW is resting – contact admin for some heat!`,
+        ],
+        restrict: [
+            `*${emoji.restrict} Feature on Break!* ⛔\nThis feature is currently taking a coffee break. Stand by for updates!`,
+            `*${emoji.restrict} Standby Mode!* 🔄\nOops! This feature is temporarily unavailable. Stay tuned!`,
+            `*${emoji.restrict} Temporarily Disabled!* 🛑\nApologies, this feature is currently in timeout!`,
+            `*${emoji.restrict} Pause Mode Activated!* ⏸️\nFeature temporarily suspended – check back soon!`,
+        ],
     }
-     [type]
-    if (msg) return  m.reply(msg)
 
+    const failMsg = msg[type] ? msg[type][Math.floor(Math.random() * msg[type].length)] : null;
+    if (failMsg) return m.reply(failMsg);
 }
+
 
 let file = global.__filename(import.meta.url, true)
 watchFile(file, async () => {
