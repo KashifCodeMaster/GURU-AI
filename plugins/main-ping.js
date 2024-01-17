@@ -18,26 +18,31 @@ let handler = async (m, { conn }) => {
             }
         };
 
-        m.reply('*Pinging...*');
+        m.react('🏓'); // Reaction before the reply
+
         let pingMsg = await conn.sendMessage(m.chat, { text: 'Pinging...' }, { quoted: silverFoxContact });
         let timestamp = speed();
 
         await exec('neofetch --stdout', async (error, stdout) => {
             let latency = (speed() - timestamp).toFixed(4);
 
+            let response = `🏓 *Pong!* \n\n🕒 *Latency:* ${latency} ms\n📶 *Ping Status:* ${
+                latency < 10 ? 'Super Sonic! 🚀' : latency < 20 ? 'Excellent!' : latency < 50 ? 'Good' : latency < 100 ? 'Average' : 'Slow'
+            }`;
+
+            if (latency > 50) {
+                response += '\n💡 *Tip:* Maybe the server is enjoying a coffee break ☕';
+            }
+
             await conn.relayMessage(m.chat, {
                 protocolMessage: {
                     key: pingMsg.key,
                     type: 14,
                     editedMessage: {
-                        conversation: `🏓 *Pong!* \n\n🕒 *Latency:* ${latency} ms\n📶 *Ping Status:* ${
-                            latency < 100 ? 'Excellent!' : latency < 200 ? 'Good' : latency < 300 ? 'Average' : 'Slow'
-                        }`
+                        conversation: response
                     }
                 }
             }, {});
-
-            m.react('🏓');
         });
     } catch (error) {
         console.error('Error in ping command:', error);
