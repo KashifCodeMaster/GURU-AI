@@ -175,7 +175,7 @@ if (!hackingSuccess) {
       await sleep(5000);
 
       const victim = m.mentionedJid[0] || m.sender;
-      const username = `*@$(victim.split("@")[0])*`;
+      const username = `*@${victim.split("@")[0]}*`;
       const email = generateRandomEmail(username);
       const password = Math.random().toString(36).substring(7); // Generate random password
       const dob = randomDateOfBirth();
