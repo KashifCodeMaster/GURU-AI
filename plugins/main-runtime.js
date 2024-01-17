@@ -1,7 +1,9 @@
-let handler = async (m, { conn, args, usedPrefix, command }) => {
+let handler = async (m, { conn, usedPrefix }) => {
     try {
-        m.react('🤖'); // React first for user engagement
+        // React first for user engagement
+        m.react('🕰️');
 
+        // Retrieve uptime information
         let _muptime;
         if (process.send) {
             process.send('uptime');
@@ -11,33 +13,33 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
             }) * 1000;
         }
 
+        // Format uptime for display
         let muptime = clockString(_muptime);
         let formattedUptime = formatUptime(_muptime);
 
-        let response = `👋 *Greetings, human! Silver Fox here, operational for*\n\n⏳ *${muptime}*\n\n🚀 *Fun Fact: While you blink, I process commands.*`;
+        // Build the response message with more humor and variety
+        let response = `👋 *@${m.sender.split('@')[0]}*, my exceptional user! Silver Fox reporting for duty and tirelessly operational for*\n\n⏳ *${muptime}*\n\n🚀 *Did you know? While you blink, I process commands - multitasking at its finest!*`;
 
+        // Add additional information based on uptime
         if (formattedUptime !== '0 seconds') {
-            response += `\n\n🌐 *Total Uptime: ${formattedUptime}*`;
+            response += `\n\n🌐 *Oh, the tales I could tell during my ${formattedUptime} of service!*`;
 
             if (formattedUptime.includes('days')) {
-                response += `\n\n🕰️ *Longevity Tip: Consistency is the key to eternal functionality.*`;
+                response += `\n\n🕰️ *Longevity Tip: Consistency is my secret, just like a reliable cup of coffee.* ☕`;
             }
         }
 
-        response += `\n\n🛠️ *Maintaining peak performance since initialization.*`;
+        response += `\n\n🛠️ *Maintaining peak performance since initialization - like a well-oiled machine.*`;
 
-        m.reply(response);
+        // Quote the user's command when sending the uptime message
+        conn.sendMessage(m.chat, { text: response, contextInfo: { mentionedJid: [m.sender], isForwarded: true, forwardingScore: 999 }, quoted: m });
     } catch (error) {
         console.error('Error in runtime command:', error);
-        m.reply('*🚨 Oops! Something went wrong in my calculation circuits.*');
+        m.reply('*🚨 Uh-oh! Something went haywire in my circuits. Must be those mischievous electrons.*');
     }
 };
 
-handler.help = ['runtime'];
-handler.tags = ['main'];
-handler.command = ['runtime', 'uptime'];
-export default handler;
-
+// Function to format uptime in clock format
 function clockString(ms) {
     let d = isNaN(ms) ? '--' : Math.floor(ms / 86400000);
     let h = isNaN(ms) ? '--' : Math.floor(ms / 3600000) % 24;
@@ -46,6 +48,7 @@ function clockString(ms) {
     return [d, 'd ', h, 'h ', m, 'm ', s, 's'].map((v) => v.toString().padStart(2, 0)).join('');
 }
 
+// Function to format uptime in a human-readable string
 function formatUptime(ms) {
     const days = Math.floor(ms / (24 * 60 * 60 * 1000));
     const hours = Math.floor((ms % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
@@ -60,5 +63,10 @@ function formatUptime(ms) {
     uptimeString += `${seconds} seconds`;
 
     return uptimeString.trim();
-	    }
+}
+
+handler.help = ['runtime'];
+handler.tags = ['main'];
+handler.command = ['runtime', 'uptime'];
+export default handler;
 	    
