@@ -5,30 +5,32 @@ import moment from 'moment-timezone';
 
 const defaultMenu = {
   before: `
-  Hello %tag,\n %ucpn\n
-  🤖 *${botname} at Your Service!*\n
-  
-  ┏━━༻ *USER STATS* ༺━━┓
-  ⚔️ *Name:* %name
-  💰 *Gold:* %credit
-  🎭 *Role:* %role
-  📈 *Level:* %level [ %xp4levelup XP to Level Up]
-  🌟 *XP:* %exp / %maxexp
-  🌌 *Total XP:* %totalexp
-  ╰──────────⳹
+Hello %tag,
+%ucpn
 
-  ┏━━༻ *ROBOT INFO* ༺━━┓
-  ⚙️ *Robot Name:* ${botname}
-  ⚓ *Command Prefix:* *%_p*
-  🚀 *Operation Mode:* %mode
-  ⏰ *Uptime:* %muptime
-  💾 *Database:*  %totalreg
-  ╰──────────⳹
+🤖 *${botname} at Your Service!*
 
-  ┏༻ *COMMAND CENTER* ༺┓
-  │ *%totalfeatures* Commands
-  ╰──────────⳹
-  %readmore
+┏━━༻ *USER STATS* ༺━━┓
+⚔️ *Name:* %name
+💰 *Gold:* %credit
+🎭 *Role:* %role
+📈 *Level:* %level [ %xp4levelup XP to Level Up]
+🌟 *XP:* %exp / %maxexp
+🌌 *Total XP:* %totalexp
+╰──────────⳹
+
+┏━━༻ *ROBOT INFO* ༺━━┓
+⚙️ *Robot Name:* ${botname}
+⚓ *Command Prefix:* *%_p*
+🚀 *Operation Mode:* %mode
+⏰ *Uptime:* %muptime
+💾 *Database:*  %totalreg
+╰──────────⳹
+
+┏༻ *COMMAND CENTER* ༺┓
+│ *%totalfeatures* Commands
+╰──────────⳹
+%readmore
 `.trimStart(),
   header: '┏━❀•🎀 *%category* 🎀•❀━┓',
   body: '◈ %cmd %isPremium %islimit',
@@ -125,9 +127,14 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
     };
     const caption = text.trim().replace(/%([%puptimecrdname]+)/g, (_, name) => replace[name]);
     
-    conn.sendMessage(m.chat, { video: { url: menuvid }, caption, gifPlayback: true, gifAttribution: 0 }, { quoted: contact });
-
+conn.sendMessage(
+  m.chat,
+  { video: { url: menuvid }, caption, gifPlayback: true, gifAttribution: 0 },
+  { quoted: contact, contextInfo: { mentionedJid: [m.sender] } }
+);
+    
   } catch (e) {
+    console.error(e);
     await conn.reply(m.chat, '😵 Oops! Something went wrong.', m);
     throw e;
   }
