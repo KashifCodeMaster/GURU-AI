@@ -1,41 +1,52 @@
+let handler = async (m, { conn }) => {
+    let uptime = process.uptime();
+    let name = "Silver Fox";
 
+    let days = Math.floor(uptime / 86400);
+    let hours = Math.floor(uptime / 3600) % 24;
+    let minutes = Math.floor(uptime / 60) % 60;
 
-let handler = async(m, { conn, text, usedPrefix, command }) => {
+    let greetings = [
+        `Greetings, ${m.mentionedJid[0]}! 🌟`,
+        `Hello there, ${m.mentionedJid[0]}! 🦊`,
+        `Ahoy, ${m.mentionedJid[0]}! 🚀`,
+        `Salutations, ${m.mentionedJid[0]}! 🌈`,
+        `Hey, ${m.mentionedJid[0]}! Welcome to the fox den! 🌟`,
+        `Greetings, ${m.mentionedJid[0]}! 🌌`,
+        `Well met, ${m.mentionedJid[0]}! 🌍`,
+        `Hello, ${m.mentionedJid[0]}! 🧠`,
+        `Greetings, ${m.mentionedJid[0]}! 🌟`
+    ];
 
-    // Sound
-    let name = m.pushName || conn.getName(m.sender)
-    var vn = "https://cdn.jsdelivr.net/gh/Guru322/GURU-BOT@main/Assets/mp3/Alive.mp3"
-    let url = "https://github.com/Guru322/GURU-BOT"
-    let murl = "https://youtu.be/DibiLc17dh0?si=xp9bQ-_frEyDB1-i"
-    let img = "https://cdn.wallpapersafari.com/71/19/7ZfcpT.png"
-    let con = { key: { fromMe: false, participant: `${m.sender.split`@`[0]}@s.whatsapp.net`, ...(m.chat ? { remoteJid: '16504228206@s.whatsapp.net' } : {}) }, message: { contactMessage: { displayName: `${name}`, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:;a,;;;\nFN:${name}\nitem1.TEL;waid=${m.sender.split('@')[0]}:${m.sender.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`}}}
-    let doc = {
-        audio: {
-          url: vn
-        },
-        mimetype: 'audio/mpeg',
-        ptt: true,
-        waveform:  [100, 0, 100, 0, 100, 0, 100],
-        fileName: "Guru",
-    
-        contextInfo: {
-          mentionedJid: [m.sender],
-          externalAdReply: {
-          title: "I AM ALIVE",
-          body: "GURU BOT",
-          thumbnailUrl: img,
-          sourceUrl: 'https://chat.whatsapp.com/F3sB3pR3tClBvVmlIkqDJp',
-          mediaType: 1,
-          renderLargerThumbnail: true
-          }}
-      };
-    
-      await conn.sendMessage(m.chat, doc, { quoted: con });
-    
+    let randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+
+    let message = `${randomGreeting} I am ${name}, the Silver Fox. 🦊\nI'm delighted to confirm that I am alive, well, and at your service. 🐶\n\n⌛ *I've been actively functioning for* ${days} days, ${hours} hours, ${minutes} minutes\n\nYour interaction keeps my circuits buzzing with joy! 😁`;
+
+    let additionalInfo = '';
+    if (Math.random() > 0.5) {
+        additionalInfo += `\n\n🌟 *Fun Fact:* Foxes are known for their adaptability in different environments. Just like me adapting to your needs! 🥹🦊`;
+    } else {
+        additionalInfo += `\n\nIn the vast digital space, I'm like a friendly fox guiding you through the virtual wilderness! 🥹🦊`;
     }
-    
-    handler.help = ['alive']
-    handler.tags = ['main']
-    handler.command = /^(alive)$/i 
+    message += additionalInfo;
 
-    export default handler;
+    m.react('🦊');
+
+    conn.sendMessage(m.chat, {
+        text: message,
+        mentions: [m.sender],
+        contextInfo: {
+            externalAdReply: {
+                showAdAttribution: true
+            },
+            isForwarded: true,
+            forwardingScore: 999
+        }
+    });
+}
+
+handler.help = ['alive']
+handler.tags = ['main']
+handler.command = /^(alive)$/i 
+
+export default handler;
