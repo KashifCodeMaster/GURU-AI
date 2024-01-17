@@ -4,8 +4,8 @@ let handler = async (m, { conn, participants, usedPrefix, command }) => {
 
     // Check if the command is used with a mentioned user or a quoted message
     if (!m.mentionedJid[0] && !m.quoted) {
-        m.reply(kickUsage, m.chat, { mentions: conn.parseMention(kickUsage) });
         m.react('🤔');
+	m.reply(kickUsage, m.chat, { mentions: conn.parseMention(kickUsage) });
         return;
     }
 
@@ -83,7 +83,7 @@ let handler = async (m, { conn, participants, usedPrefix, command }) => {
  ];
 
     // Send a random fun message before removing the user
-    m.reply(getRandomMessage(funnyMessages));
+    m.reply(getRandomMessage(funnyMessages), m.chat, { mentions: [user] });
     m.react('✈️');
 
 
