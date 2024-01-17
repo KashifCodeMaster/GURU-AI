@@ -32,7 +32,7 @@ let handler = async (m, { conn, usedPrefix }) => {
         response += `\n\n🛠️ *Maintaining peak performance since initialization - like a well-oiled machine.*`;
 
         // Quote the user's command when sending the uptime message
-        conn.sendMessage(m.chat, { text: response, contextInfo: { mentionedJid: [m.sender], isForwarded: true, forwardingScore: 999 }, quoted: m });
+        conn.sendMessage(m.chat, { text: response, contextInfo: { mentionedJid: [m.sender], isForwarded: true, forwardingScore: 999, externalAdReply: { showAdAttribution: true } }, quoted: m });
     } catch (error) {
         console.error('Error in runtime command:', error);
         m.reply('*🚨 Uh-oh! Something went haywire in my circuits. Must be those mischievous electrons.*');
@@ -69,4 +69,3 @@ handler.help = ['runtime'];
 handler.tags = ['main'];
 handler.command = ['runtime', 'uptime'];
 export default handler;
-	    
