@@ -76,7 +76,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
     const tags = [...new Set(help.flatMap(plugin => plugin.tags))];
     conn.menu = conn.menu || {};
     const before = conn.menu.before || defaultMenu.before;
-    const header = conn.menu.header || defaultMenu.header;
+    const header = conn.menu.header || defaultMenu.header || '┏━❀•🎀 *%category* 🎀•❀━┓';
     const body = conn.menu.body || defaultMenu.body;
     const footer = conn.menu.footer || defaultMenu.footer;
     const after = conn.menu.after || (conn.user.jid == global.conn.user.jid ? '' : `Powered by [CoolRobot](https://wa.me/${global.conn.user.jid.split`@`[0]})`) + defaultMenu.after;
