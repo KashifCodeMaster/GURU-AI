@@ -12,10 +12,8 @@ let handler = async (m, { conn }) => {
         `Ahoy, @${m.sender.split('@')[0]}! 🐶`,
         `Salutations, @${m.sender.split('@')[0]}! 🐶`,
         `Hey, @${m.sender.split('@')[0]}! 🐶`,
-        `Greetings, @${m.sender.split('@')[0]}! 🐶`,
-        `Well met, @${m.sender.split('@')[0]}! 🐶`,
-        `Hello, @${m.sender.split('@')[0]}! 🧠`,
-        `Greetings, @${m.sender.split('@')[0]}! 🐶`
+        `Yo, @${m.sender.split('@')[0]}! 🐶`,
+        `Hello, @${m.sender.split('@')[0]}! 🥹`,
     ];
 
     let randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
@@ -23,9 +21,9 @@ let handler = async (m, { conn }) => {
     let message = `
 ${randomGreeting}
 I am ${name}, the Silver Fox. 🦊
-Delighted to confirm that I am alive, well, and at your service. 🤖
+I'm delighted to confirm that I am alive, well, and at your service. 🤖
 
-👩🏻‍🏭 *Active for*: ${days} days, ${hours} hours, ${minutes} minutes
+👩🏻‍🏭 *I've been actively functioning for* ${days} days, ${hours} hours, ${minutes} minutes
 Your interaction keeps my circuits buzzing with joy! 😁
 `;
 
