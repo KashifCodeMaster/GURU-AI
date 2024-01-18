@@ -20,7 +20,14 @@ let handler = async (m, { conn }) => {
 
     let randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
 
-    let message = `${randomGreeting} I am ${name}, the Silver Fox. 🦊\nI'm delighted to confirm that I am alive, well, and at your service. 🤖\n\n👩🏻‍🏭 *I've been actively functioning for* ${days} days, ${hours} hours, ${minutes} minutes\n\nYour interaction keeps my circuits buzzing with joy! 😁`;
+    let message = `
+${randomGreeting}
+I am ${name}, the Silver Fox. 🦊
+Delighted to confirm that I am alive, well, and at your service. 🤖
+
+👩🏻‍🏭 *Active for*: ${days} days, ${hours} hours, ${minutes} minutes
+Your interaction keeps my circuits buzzing with joy! 😁
+`;
 
     m.react('🦊');
 
