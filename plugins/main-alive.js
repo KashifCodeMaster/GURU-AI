@@ -7,15 +7,15 @@ let handler = async (m, { conn }) => {
     let minutes = Math.floor(uptime / 60) % 60;
 
     let greetings = [
-        `Greetings, @${m.sender.split('@')[0]}! 🐶\n`,
-        `Hello there, @${m.sender.split('@')[0]}! 🐶\n`,
-        `Ahoy, @${m.sender.split('@')[0]}! 🐶\n`,
-        `Salutations, @${m.sender.split('@')[0]}! 🐶\n`,
-        `Hey, @${m.sender.split('@')[0]}! 🐶\n`,
-        `Greetings, @${m.sender.split('@')[0]}! 🐶\n`,
-        `Well met, @${m.sender.split('@')[0]}! 🐶\n`,
-        `Hello, @${m.sender.split('@')[0]}! 🧠\n`,
-        `Greetings, @${m.sender.split('@')[0]}! 🐶\n`
+        `Greetings, @${m.sender.split('@')[0]}! 🐶`,
+        `Hello there, @${m.sender.split('@')[0]}! 🐶`,
+        `Ahoy, @${m.sender.split('@')[0]}! 🐶`,
+        `Salutations, @${m.sender.split('@')[0]}! 🐶`,
+        `Hey, @${m.sender.split('@')[0]}! 🐶`,
+        `Greetings, @${m.sender.split('@')[0]}! 🐶`,
+        `Well met, @${m.sender.split('@')[0]}! 🐶`,
+        `Hello, @${m.sender.split('@')[0]}! 🧠`,
+        `Greetings, @${m.sender.split('@')[0]}! 🐶`
     ];
 
     let randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
@@ -28,6 +28,7 @@ let handler = async (m, { conn }) => {
         text: message,
         mentions: [m.sender],
         contextInfo: {
+            mentionedJid: [m.sender],
             isForwarded: true,
             forwardingScore: 999
         }
