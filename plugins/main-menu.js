@@ -32,7 +32,7 @@ Hello %tag,
 ╰──────────⳹
 %readmore
 `.trimStart(),
-  header: '┏━❀•🎀 *%category* 🎀•❀━┓',
+  header: '┏━❀•🎀 *%CATEGORY* 🎀•❀━┓',
   body: '◈ %cmd %isPremium %islimit',
   footer: '╚══•❅•°•❈•°•❅•══╝',
   after: '\n%me',
@@ -76,9 +76,9 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
     const tags = [...new Set(help.flatMap(plugin => plugin.tags))];
     conn.menu = conn.menu || {};
     const before = conn.menu.before || defaultMenu.before;
-    const header = (conn.menu.header || defaultMenu.header || '').replace(/%category/g, tag.toUpperCase()) || '┏━❀•🎀 *%category* 🎀•❀━┓';
-    const body = conn.menu.body || defaultMenu.body;
-    const footer = conn.menu.footer || defaultMenu.footer;
+    const header = conn.menu.header || defaultMenu.header || '┏━❀•🎀 *%category* 🎀•❀━┓';
+    const body = conn.menu.body || defaultMenu.body || '◈ %cmd %isPremium %islimit';
+    const footer = conn.menu.footer || defaultMenu.footer || '╚══•❅•°•❈•°•❅•══╝';
     const after = conn.menu.after || (conn.user.jid == global.conn.user.jid ? '' : `Powered by [CoolRobot](https://wa.me/${global.conn.user.jid.split`@`[0]})`) + defaultMenu.after;
     const text = [
       before,
@@ -102,7 +102,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
       muptime,
       me: conn.getName(conn.user.jid),
       npmname: _package.name,
-      npmdesc: _package.description,
+      npmdesc: __package.description,
       version: _package.version,
       exp: exp - min,
       maxexp: xp,
@@ -125,14 +125,10 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
       role,
       readmore: String.fromCharCode(8206).repeat(4001),
     };
-    const caption = text.trim().replace(/%([%puptimecrdname]+)/g, (_, name) => replace[name]);
+    const caption = text.trim().replace(/%([%puptimecrdnameCATEGORY]+)/g, (_, name) => replace[name]);
     
-conn.sendMessage(
-  m.chat,
-  { video: { url: menuvid }, caption, gifPlayback: true, gifAttribution: 0 },
-  { quoted: contact, contextInfo: { mentionedJid: [m.sender] } }
-);
-    
+    conn.sendMessage(m.chat, { video: { url: menuvid }, caption, gifPlayback: true, gifAttribution: 0 }, { quoted: contact });
+
   } catch (e) {
     console.error(e);
     await conn.reply(m.chat, '😵 Oops! Something went wrong.', m);
@@ -156,5 +152,5 @@ function ucapan() {
   if (time >= 11) return '🌞 Good Afternoon!';
   if (time >= 4) return '😎 Good Morning!';
   return '😄 Good morning!';
-      }
-      
+  }
+  
