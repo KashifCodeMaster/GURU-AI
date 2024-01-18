@@ -7,20 +7,20 @@ let handler = async (m, { conn }) => {
     let minutes = Math.floor(uptime / 60) % 60;
 
     let greetings = [
-        `Greetings, @${m.sender.split('@')[0]}! 🐶`,
-        `Hello there, @${m.sender.split('@')[0]}! 🦊`,
-        `Ahoy, @${m.sender.split('@')[0]}! 🐶`,
-        `Salutations, @${m.sender.split('@')[0]}! 🐶`,
-        `Hey, @${m.sender.split('@')[0]}! 🐶`,
-        `Greetings, @${m.sender.split('@')[0]}! 🐶`,
-        `Well met, @${m.sender.split('@')[0]}! 🐶`,
-        `Hello, @${m.sender.split('@')[0]}! 🧠`,
-        `Greetings, @${m.sender.split('@')[0]}! 🐶`
+        `Greetings, @${m.sender.split('@')[0]}! 🐶\n`,
+        `Hello there, @${m.sender.split('@')[0]}! 🐶\n`,
+        `Ahoy, @${m.sender.split('@')[0]}! 🐶\n`,
+        `Salutations, @${m.sender.split('@')[0]}! 🐶\n`,
+        `Hey, @${m.sender.split('@')[0]}! 🐶\n`,
+        `Greetings, @${m.sender.split('@')[0]}! 🐶\n`,
+        `Well met, @${m.sender.split('@')[0]}! 🐶\n`,
+        `Hello, @${m.sender.split('@')[0]}! 🧠\n`,
+        `Greetings, @${m.sender.split('@')[0]}! 🐶\n`
     ];
 
     let randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
 
-    let message = `${randomGreeting} I am ${name}, the Silver Fox. 🦊\nI'm delighted to confirm that I am alive, well, and at your service. 🤖\n\n🤖 *I've been actively functioning for* ${days} days, ${hours} hours, ${minutes} minutes\n\nYour interaction keeps my circuits buzzing with joy! 😁`;
+    let message = `${randomGreeting} I am ${name}, the Silver Fox. 🦊\nI'm delighted to confirm that I am alive, well, and at your service. 🤖\n\n👩🏻‍🏭 *I've been actively functioning for* ${days} days, ${hours} hours, ${minutes} minutes\n\nYour interaction keeps my circuits buzzing with joy! 😁`;
 
     m.react('🦊');
 
