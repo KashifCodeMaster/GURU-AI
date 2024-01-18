@@ -26,7 +26,7 @@ let handler = async (m, { conn }) => {
 
     conn.sendMessage(m.chat, {
         text: message,
-        mentions: [m.sender],
+        quoted: m,
         contextInfo: {
             mentionedJid: [m.sender],
             isForwarded: true,
