@@ -9,7 +9,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     m.react('🎨'); // Reaction before processing
     m.reply('*Processing your creative request...*');
 
-    const endpoint = `https://gurugpt.cyclic.app/dalle?prompt=${encodeURIComponent(text)}`;
+    const endpoint = `https://cute-tan-gorilla-yoke.cyclic.app/imagine?text=${encodeURIComponent(text)}`;
     const response = await fetch(endpoint);
 
     if (response.ok) {
@@ -28,5 +28,5 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
 handler.help = ['dalle'];
 handler.tags = ['AI'];
-handler.command = ['dalle', 'gen', 'gimg', 'openai2'];
+handler.command = ['dalle', 'gen', 'imagine', 'openai2'];
 export default handler;
