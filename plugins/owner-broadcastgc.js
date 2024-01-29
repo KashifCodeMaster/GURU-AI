@@ -4,19 +4,19 @@ let handler = async (m, { conn, isROwner, text }) => {
     try {
         let groups = await conn.groupFetchAllParticipating();
 
-        if (groups.length === 0) {
-            return m.reply('Error 404: Active groups not found. Broadcasting in groups requires the group chats.');
+        if (!Array.isArray(groups) || groups.length === 0) {
+            return m.reply('*Error 404: Active groups not found. Broadcasting requires an audience.*');
         }
 
         let groupIds = groups.map(group => group.id);
         let broadcastMessage = m.quoted?.text || text;
 
         if (!broadcastMessage) {
-            return m.reply('Error: Please provide a message for the broadcast.');
+            return m.reply('*Error: Please provide a message for the broadcast.*');
         }
 
         let header = '📢 *Newsletter Broadcast* 📢\n\n';
-        let footer = '\n\n💌 This message has been broadcasted from the developers as part of our newsletter to multiple chats.';
+        let footer = '\n\nNote: This message has been broadcasted from the developers as part of our newsletter to multiple chats.';
 
         let successCount = 0;
         let failureCount = 0;
@@ -51,13 +51,14 @@ let handler = async (m, { conn, isROwner, text }) => {
         m.reply(`${successMessage}${failureMessage}`);
     } catch (error) {
         console.error('Error in broadcast command:', error);
-        m.reply('*🚨 Oops! Something went wrong while broadcasting your message. Our apologies for any inconvenience caused.*');
+        m.reply('*🥺 Oops! Something went wrong while broadcasting your message. Try again later.*');
     }
 };
 
-handler.help = ['newslettergroup', 'broadcastgroup'].map(v => v + ' <text>');
+handler.help = ['broadcast'].map(v => v + ' <text>');
 handler.tags = ['owner'];
 handler.command = /^(newslettergroup|broadcastgroup)$/i;
 handler.owner = true;
 
 export default handler;
+    
