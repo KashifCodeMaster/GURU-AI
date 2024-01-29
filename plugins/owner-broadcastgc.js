@@ -1,29 +1,63 @@
 let handler = async (m, { conn, isROwner, text }) => {
-    const delay = time => new Promise(res => setTimeout(res, time))
-    let getGroups = await conn.groupFetchAllParticipating()
-    let groups = Object.entries(getGroups).slice(0).map(entry => entry[1])
-    let anu = groups.map(v => v.id)
-    var pesan = m.quoted && m.quoted.text ? m.quoted.text : text
-    if(!pesan) throw '*ENTER THE MESSAGE YOU WANT TO BROADCAST*'
-    for (let i of anu) {
-    await delay(500)
-    conn.relayMessage(i, 
-{ liveLocationMessage: {
-  degreesLatitude: 35.685506276233525,
-  degreesLongitude: 139.75270667105852,
-  accuracyInMeters: 0,
-degreesClockwiseFromMagneticNorth: 2,
-caption: '[ATTENTION]\n\n' + pesan + '\n\nTHIS IS AN OFFICIAL STATEMENT',
-sequenceNumber: 2,
-timeOffset: 3,
-contextInfo: m,
-}}, {}).catch(_ => _)
-    }
-  m.reply(`*MESSAGE SENT TO ${anu.length} GROUP/S*\n\n*NOTE: THIS COMMAND MAY FAIL AND NOT BE SENT TO ALL CHATS, SORRY FOR THE TIME BEING*`)
-}
-handler.help = ['broadcastgroup', 'bcgc'].map(v => v + ' <text>')
-handler.tags = ['owner']
-handler.command = /^(broadcast|bc)(group|grup|gc)$/i
-handler.owner = true
+    const delay = time => new Promise(res => setTimeout(res, time));
 
-export default handler
+    try {
+        let groups = await conn.groupFetchAllParticipating();
+
+        if (groups.length === 0) {
+            return m.reply('Error 404: Active groups not found. Broadcasting in groups requires the group chats.');
+        }
+
+        let groupIds = groups.map(group => group.id);
+        let broadcastMessage = m.quoted?.text || text;
+
+        if (!broadcastMessage) {
+            return m.reply('Error: Please provide a message for the broadcast.');
+        }
+
+        let header = '📢 *Newsletter Broadcast* 📢\n\n';
+        let footer = '\n\n💌 This message has been broadcasted from the developers as part of our newsletter to multiple chats.';
+
+        let successCount = 0;
+        let failureCount = 0;
+
+        for (let groupId of groupIds) {
+            await delay(1000); // Increased delay to prevent flooding issues
+
+            try {
+                await conn.relayMessage(groupId, {
+                    text: `${header}${broadcastMessage}${footer}`,
+                    contextInfo: {
+                        isForwarded: true,
+                        forwardingScore: 999
+                    }
+                }, {});
+                successCount++;
+            } catch (error) {
+                console.error(`Error broadcasting to group ${groupId}:`, error);
+                failureCount++;
+                m.reply(`*Error broadcasting to group ${groupId}. Details: ${error}*`);
+            }
+        }
+
+        let successMessage = successCount > 0 ?
+            `*Newsletter broadcast sent successfully to ${successCount} group/s.*\n\n` :
+            '*No groups were successfully reached.*\n\n';
+
+        let failureMessage = failureCount > 0 ?
+            `*Failed to send to ${failureCount} group/s. Please check the error details.*` :
+            '';
+
+        m.reply(`${successMessage}${failureMessage}`);
+    } catch (error) {
+        console.error('Error in broadcast command:', error);
+        m.reply('*🚨 Oops! Something went wrong while broadcasting your message. Our apologies for any inconvenience caused.*');
+    }
+};
+
+handler.help = ['newslettergroup', 'broadcastgroup'].map(v => v + ' <text>');
+handler.tags = ['owner'];
+handler.command = /^(newslettergroup|broadcastgroup)$/i;
+handler.owner = true;
+
+export default handler;
