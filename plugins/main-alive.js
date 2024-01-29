@@ -24,12 +24,13 @@ I am ${name}, the Silver Fox. 🦊
 I'm delighted to confirm that I am alive, well, and at your service. 🤖
 
 👩🏻‍🏭 *I've been actively functioning for* ${days} days, ${hours} hours, ${minutes} minutes
-Your interaction keeps my circuits buzzing with joy! 😁
+
+Keep Smiling! 😁
 `;
 
     m.react('🦊');
 
-    conn.sendMessage(m.chat, {
+    m.reply({
         text: message,
         quoted: m,
         contextInfo: {
