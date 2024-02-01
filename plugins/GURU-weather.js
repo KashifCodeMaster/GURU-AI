@@ -4,7 +4,8 @@ let handler = async (m, { args }) => {
     try {
         if (!args[0]) {
             m.react('🤦🏻‍♀️');
-            throw '*Oh dear, where do you want to know the weather? Please provide a place.*';
+            m.reply('*Oh dear, where do you want to know the weather? Please provide a place.*');
+            return;
         }
 
         m.react('⌛');
