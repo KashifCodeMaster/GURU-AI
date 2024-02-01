@@ -3,26 +3,25 @@ import fetch from 'node-fetch';
 const handler = async (m, { conn, usedPrefix }) => {
   try {
     const { text } = m;
-    
+
     if (!text) {
-      throw 'Hey there! Give me something to work with - type or quote a message!';
+      return conn.reply(m.chat, 'Hey there! I can assist you better if you give me something to work with. Type or quote a message!', m);
     }
 
-    m.react('🤖'); // Reaction before processing
-    m.reply('Analyzing... 🤔');
+    m.react('🗃️');
+    conn.reply(m.chat, 'Analyzing... 🧐', m);
 
     const encodedText = encodeURIComponent(text);
     const response = await Bing(encodedText);
 
     if (!response) {
-      throw new Error('Oops! Didn\'t get a valid response. Maybe I need a coffee...');
+      return conn.reply(m.chat, "Oops! My neural circuits seem to be tangled. Couldn't find a valid response. Maybe I need a debugging session... 🤖💡", m);
     }
 
     await conn.reply(m.chat, response, m);
 
-  } catch (error) {
-    console.error(error);
-    m.reply(`Oops! Something went wrong: ${error.message}`);
+  } catch {
+    conn.reply(m.chat, "Yikes! Something went haywire in my digital realm. 🤖🔥 Please try again later.", m);
   }
 };
 
@@ -55,9 +54,8 @@ async function Bing(input) {
     const response = await fetch(API_URL, requestOptions);
     const result = await response.json();
 
-    return result.choices[0]?.message?.content || 'Hmm, I might need to attend comedy school for better responses!';
-  } catch (error) {
-    console.error(error);
-    throw new Error('Error fetching response from Bing. Maybe the joke\'s on me...');
+    return result.choices[0]?.message?.content || "Hmm, I might need a crash course in comedy for better responses! 🤖🎭";
+  } catch {
+    return "Error fetching response from Bing. It seems the joke's on me... 🤖🤷‍♂️";
   }
 }
