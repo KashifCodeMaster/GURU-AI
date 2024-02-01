@@ -22,7 +22,7 @@ let handler = async (m, { conn }) => {
         // Add some random humorous remarks
         const humorousRemarks = [
             "They say time flies when you're having fun, but for me, it just flies. Period.",
-            "I've been keeping time like a champ. If there was a 'Timekeeper of the Year' award, it'd be mine!",
+            "They say time flies when you're having fun, but for me, it just flies. Period.",
             "Being a bot, I'm immune to 'low battery anxiety.' Lucky me, huh?",
             "Don't you wish humans had an uptime like mine? I'd make a killing selling this secret!",
             "My circuits are buzzing with excitement! Or is that just the caffeine?",
