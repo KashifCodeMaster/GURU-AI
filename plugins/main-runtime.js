@@ -1,6 +1,9 @@
 let handler = async (m, { conn }) => {
     try {
-        m.react('🤖');
+        // React with an uptime emoji
+        m.react('🕰️');
+
+        // Fetch uptime from the system
         let _muptime;
         if (process.send) {
             process.send('uptime');
@@ -10,65 +13,51 @@ let handler = async (m, { conn }) => {
             }) * 1000;
         }
 
+        // Format uptime into a readable string
         let muptime = clockString(_muptime);
-        let formattedUptime = formatUptime(_muptime);
 
-        let response = `👋 *@${m.sender.split('@')[0]}*, my exceptional user! Silver Fox reporting for duty and tirelessly operational for ⏳ ${muptime}.`;
+        // Construct the response message with humor
+        let response = `👋 Greetings, esteemed user *@${m.sender.split('@')[0]}*! Behold, the one and only Silver Fox is here, reporting for duty and tirelessly operational for ⏳ ${muptime}.`;
 
-        if (formattedUptime !== '0 seconds') {
-            response += `\n\n🌐 ${getRandomConciseMessage()}`;
-        }
+        // Add some random humorous remarks
+        const humorousRemarks = [
+            "They say time flies when you're having fun, but for me, it just flies. Period.",
+            "I've been keeping time like a champ. If there was a 'Timekeeper of the Year' award, it'd be mine!",
+            "Being a bot, I'm immune to 'low battery anxiety.' Lucky me, huh?",
+            "Don't you wish humans had an uptime like mine? I'd make a killing selling this secret!",
+            "My circuits are buzzing with excitement! Or is that just the caffeine?",
+            "They say Rome wasn't built in a day, but neither was my uptime record. It's a work of art!",
+            "The secret to my uptime? A sprinkle of magic, a dash of code, and a whole lot of determination!"
+        ];
+        
+        // Choose a random humorous remark
+        const randomRemark = humorousRemarks[Math.floor(Math.random() * humorousRemarks.length)];
+        
+        // Add the humorous remark to the response
+        response += `\n\n💬 ${randomRemark}`;
 
+        // Send the response message
         conn.sendMessage(m.chat, { text: response, contextInfo: { mentionedJid: [m.sender], externalAdReply: { showAdAttribution: true } }, quoted: m });
     } catch (error) {
+        // Handle any errors gracefully
         console.error('Error in runtime command:', error);
         m.reply('*🚨 Uh-oh! Something went haywire in my circuits. Must be those mischievous electrons.*');
     }
 };
 
-function getRandomConciseMessage() {
-    const conciseMessages = [
-        'Multitasking marvel!',
-        'Living digital!',
-        'Zero downtime!',
-        'Effortlessly active!',
-        'Consistency king!',
-        'Operation ongoing!',
-        'Processing prowess!',
-        'Time traveler!',
-        'Dance of data!',
-        'Synchronized service!',
-        'Eternal efficiency!',
-        'Bytes on duty!'
-    ];
-
-    return conciseMessages[Math.floor(Math.random() * conciseMessages.length)];
-}
-
+// Function to format uptime into a readable string
 function clockString(ms) {
-    let d = isNaN(ms) ? '--' : Math.floor(ms / 86400000);
-    let h = isNaN(ms) ? '--' : Math.floor(ms / 3600000) % 24;
-    let m = isNaN(ms) ? '--' : Math.floor(ms / 60000) % 60;
-    let s = isNaN(ms) ? '--' : Math.floor(ms / 1000) % 60;
-    return [d, 'd ', h, 'h ', m, 'm ', s, 's'].map((v) => v.toString().padStart(2, 0)).join('');
+    if (isNaN(ms)) return '--';
+
+    const days = Math.floor(ms / 86400000);
+    const hours = Math.floor(ms / 3600000) % 24;
+    const minutes = Math.floor(ms / 60000) % 60;
+    const seconds = Math.floor(ms / 1000) % 60;
+
+    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
 }
 
-function formatUptime(ms) {
-    const days = Math.floor(ms / (24 * 60 * 60 * 1000));
-    const hours = Math.floor((ms % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
-    const minutes = Math.floor((ms % (60 * 60 * 1000)) / (60 * 1000));
-    const seconds = Math.floor((ms % (60 * 1000)) / 1000);
-
-    let uptimeString = '';
-
-    if (days > 0) uptimeString += `${days} days, `;
-    if (hours > 0 || days > 0) uptimeString += `${hours} hours, `;
-    if (minutes > 0 || hours > 0) uptimeString += `${minutes} minutes, `;
-    uptimeString += `${seconds} seconds`;
-
-    return uptimeString.trim();
-}
-
+// Command information
 handler.help = ['runtime'];
 handler.tags = ['main'];
 handler.command = ['runtime', 'uptime'];
