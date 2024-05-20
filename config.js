@@ -5,10 +5,25 @@ import fs from 'fs'
 import fetch from 'node-fetch'
 import axios from 'axios'
 
-global.owner = [
-  ['923036631033', 'Pixel Agent', true],
-  ['']
-] // Number of owners
+import dotenv from 'dotenv'
+dotenv.config()
+
+const ownervb = process.env.OWNERS;
+if (!ownervb) {
+    throw new Error("OWNERS env is not set");
+}
+
+const ownerlist = ownervb.split(';');
+
+global.owner = [];
+for (let i = 0; i < ownerlist.length; i += 2) {
+    const owner = [
+        ownerlist[i],            
+        ownerlist[i + 1],         
+        true                        
+    ];
+    global.owner.push(owner);
+}
 
 // global.pairingNumber = "" // put your bot number here
 
@@ -48,7 +63,7 @@ global.APIKeys = { // APIKey Here
 }
 
 // Sticker WM
-global.botname = 'Silver Fox'
+global.botname = process.env.BOTNAME
 global.premium = 'true'
 global.packname = 'Silver'
 global.author = 'Fox'
