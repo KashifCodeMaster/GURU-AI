@@ -1,12 +1,22 @@
 {
-  "name": "whatsapp-bot (GURU-BOT)",
-  "description": " Whatsapp bot.",
+  "name": "whatsapp-Automation",
+  "description": " Whatsapp Ai.",
   "keywords": [
-    "whatsapp bot"
+    "whatsapp Ai"
   ],
   "repository": "https://github.com/Guru322/GURU-BOT",
   "stack": "container",
   "env": {
+    "OWNERS": {
+      "description": "owner numbers",
+      "required": true,
+      "value": "917605902011;GURU;6281255369012;Ash"
+    },
+    "BOTNAME": {
+      "description": "Give your BOT a name",
+      "required": true,
+      "value": "ᴛʜᴇ ɢᴜʀᴜ-ʙᴏᴛ"
+    },
     "DATABASE_URL": {
       "description": "your mongodb database url",
       "required": false,
@@ -71,6 +81,11 @@
     {
       "url": "https://github.com/clhuang/heroku-buildpack-webp-binaries.git"
     }
-  ]
+  ],
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  }
 }
-
