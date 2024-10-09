@@ -6,11 +6,7 @@ import fs from 'fs'
 import dotenv from 'dotenv'
 dotenv.config()
 
-const ownervb = process.env.OWNERS;
-if (!ownervb) {
-    throw new Error("OWNERS env is not set");
-}
-
+const ownervb = process.env.OWNERS || "923289397501;Silver Fox;923068872881; Silver 2"
 const ownerlist = ownervb.split(';');
 
 global.owner = [];
