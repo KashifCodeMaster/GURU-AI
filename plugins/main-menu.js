@@ -1,210 +1,137 @@
-import {
-  promises,
-  readFileSync
-} from "fs";
-import {
-  join
-} from "path";
-import {
-  xpRange
-} from "../lib/levelling.js";
-import moment from "moment-timezone";
-import os from "os";
-import fs from "fs";
-import fetch from "node-fetch";
+import { promises } from 'fs';
+import { join } from 'path';
+import { xpRange } from '../lib/levelling.js';
+import moment from 'moment-timezone';
 
 const defaultMenu = {
   before: `
-  Hello %tag,
-  \n %ucpn\n
-  🤖 *${botname} at Your Service!*
-  
-  ┏━━༻ *USER STATS* ༺━━┓
-  ⚔️ *Name:* %name
-  💰 *Gold:* %credit
-  🎭 *Role:* %role
-  📈 *Level:* %level [ %xp4levelup XP to Level Up]
-  🌟 *XP:* %exp / %maxexp
-  🌌 *Total XP:* %totalexp
-  ╰──────────⳹
+Hello %tag,
+%ucpn
 
-  ┏━━༻ *ROBOT INFO* ༺━━┓
-  ⚙️ *Robot Name:* ${botname}
-  ⚓ *Command Prefix:* *%_p*
-  🚀 *Operation Mode:* %mode
-  ⏰ *Uptime:* %muptime
-  💾 *Database:*  %totalreg
-  ╰──────────⳹
+🤖 *${botname} at Your Service!*
 
-  ┏༻ *COMMAND CENTER* ༺┓
-  │ *%totalfeatures* Commands
-  ╰──────────⳹
-  %readmore
+┏━━༻ *USER STATS* ༺━━┓
+⚔️ *Name:* %name
+💰 *Gold:* %credit
+🎭 *Role:* %role
+📈 *Level:* %level [ %xp4levelup XP to Level Up]
+🌟 *XP:* %exp / %maxexp
+🌌 *Total XP:* %totalexp
+╰──────────⳹
+
+┏━━༻ *ROBOT INFO* ༺━━┓
+⚙️ *Robot Name:* ${botname}
+⚓ *Command Prefix:* *%_p*
+🚀 *Operation Mode:* %mode
+⏰ *Uptime:* %muptime
+💾 *Database:*  %totalreg
+╰──────────⳹
+
+┏༻ *COMMAND CENTER* ༺┓
+│ *%totalfeatures* Commands
+╰──────────⳹
+%readmore
 `.trimStart(),
-  header: "┏━❀•🎀 *%category* 🎀•❀━┓",
-  body: "◈ %cmd %isPremium %islimit",
-  footer: "╚══•❅•°•❈•°•❅•══╝",
-  after: "\n%me",
+  header: '┏━❀•🎀 *%CATEGORY* 🎀•❀━┓',
+  body: '◈ %cmd %isPremium %islimit',
+  footer: '╚══•❅•°•❈•°•❅•══╝',
+  after: '\n%me',
 };
 
-let handler = async (m, {
-  conn,
-  usedPrefix: _p,
-  __dirname,
-  args
-}) => {
-  await conn.sendMessage(m.chat, {
-    react: {
-      text: "⏳",
-      key: m.key,
-    }
-  });
-
-  let tags = {};
+let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
+  await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
 
   try {
-
     /* Info Menu */
-    let glb = global.db.data.users;
-    let usrs = glb[m.sender];
-    let tag = `@${m.sender.split("@")[0]}`;
-    let mode = global.opts["self"] ? "Private" : "Public";
-    let _package = JSON.parse(await promises.readFile(join(__dirname, "../package.json")).catch(_ => ({}))) || {};
-    let {
-      age,
-      exp,
-      limit,
-      level,
-      role,
-      registered,
-      credit
-    } = glb[m.sender];
-    let {
-      min,
-      xp,
-      max
-    } = xpRange(level, global.multiplier);
-    let name = await conn.getName(m.sender);
-    let premium = glb[m.sender].premiumTime;
-    let prems = `${premium > 0 ? "Premium": "Free"}`;
-    let ucpn = `${ucapan()}`;
+    const glb = global.db.data.users;
+    const tag = `@${m.sender.split('@')[0]}`;
+    const mode = global.opts['self'] ? 'Private' : 'Public';
+    const _package = JSON.parse(await promises.readFile(join(__dirname, '../package.json')).catch(_ => ({}))) || {};
+    const { age, exp, limit, level, role, credit } = glb[m.sender];
+    const { min, xp, max } = xpRange(level, global.multiplier);
+    const name = await conn.getName(m.sender);
+    const premium = glb[m.sender].premiumTime;
+    const prems = `${premium > 0 ? 'Premium' : 'Free'}`;
+    const ucpn = ucapan();
 
-    let _uptime = process.uptime() * 1000;
-    let _muptime;
-    if (process.send) {
-      process.send("uptime");
-      _muptime = await new Promise(resolve => {
-        process.once("message", resolve);
-        setTimeout(resolve, 1000);
-      }) * 1000;
-    }
-    let muptime = clockString(_muptime);
-    let uptime = clockString(_uptime);
+    const _uptime = process.uptime() * 1000;
+    const _muptime = process.send ? await new Promise(resolve => {
+      process.send('uptime');
+      process.once('message', resolve);
+      setTimeout(resolve, 1000);
+    }) * 1000 : _uptime;
+    const muptime = clockString(_muptime);
+    const uptime = clockString(_uptime);
 
-    let totalfeatures = Object.values(global.plugins).filter((v) => v.help && v.tags).length;
-    let totalreg = Object.keys(glb).length;
-    let help = Object.values(global.plugins).filter(plugin => !plugin.disabled).map(plugin => {
-      return {
-        help: Array.isArray(plugin.tags) ? plugin.help : [plugin.help],
-        tags: Array.isArray(plugin.tags) ? plugin.tags : [plugin.tags],
-        prefix: "customPrefix" in plugin,
-        limit: plugin.limit,
-        premium: plugin.premium,
-        enabled: !plugin.disabled,
-      };
-    });
-    for (let plugin of help)
-      if (plugin && "tags" in plugin)
-        for (let tag of plugin.tags)
-          if (!(tag in tags) && tag) tags[tag] = tag;
-    conn.menu = conn.menu ? conn.menu : {};
-    let before = conn.menu.before || defaultMenu.before;
-    let header = conn.menu.header || defaultMenu.header;
-    let body = conn.menu.body || defaultMenu.body;
-    let footer = conn.menu.footer || defaultMenu.footer;
-    let after = conn.menu.after || (conn.user.jid == global.conn.user.jid ? "" : `Powered by [CoolRobot](https://wa.me/${global.conn.user.jid.split`@`[0]})`) + defaultMenu.after;
-    let _text = [
+    const totalfeatures = Object.values(global.plugins).filter(v => v.help && v.tags).length;
+    const totalreg = Object.keys(glb).length;
+    const help = Object.values(global.plugins).filter(plugin => !plugin.disabled).map(plugin => ({
+      help: Array.isArray(plugin.tags) ? plugin.help : [plugin.help],
+      tags: Array.isArray(plugin.tags) ? plugin.tags : [plugin.tags],
+      prefix: 'customPrefix' in plugin,
+      limit: plugin.limit,
+      premium: plugin.premium,
+      enabled: !plugin.disabled,
+    }));
+    const tags = [...new Set(help.flatMap(plugin => plugin.tags))];
+    conn.menu = conn.menu || {};
+    const before = conn.menu.before || defaultMenu.before;
+    const header = conn.menu.header || defaultMenu.header || '┏━❀•🎀 *%category* 🎀•❀━┓';
+    const body = conn.menu.body || defaultMenu.body || '◈ %cmd %isPremium %islimit';
+    const footer = conn.menu.footer || defaultMenu.footer || '╚══•❅•°•❈•°•❅•══╝';
+    const after = conn.menu.after || (conn.user.jid == global.conn.user.jid ? '' : `Powered by [CoolRobot](https://wa.me/${global.conn.user.jid.split`@`[0]})`) + defaultMenu.after;
+    const text = [
       before,
-      ...Object.keys(tags).map(tag => {
-        return header.replace(/%category/g, tags[tag].toUpperCase()) + "\n" + [
-          ...help.filter(menu => menu.tags && menu.tags.includes(tag) && menu.help).map(menu => {
-            return menu.help.map(help => {
-              return body.replace(/%cmd/g, menu.prefix ? help : "%_p" + help)
-                .replace(/%islimit/g, menu.limit ? "Ⓛ" : "")
-                .replace(/%isPremium/g, menu.premium ? "🅟" : "")
-                .trim();
-            }).join("\n");
-          }),
-          footer
-        ].join("\n");
-      }),
-      after
-    ].join("\n\n");
-    let text = typeof conn.menu == "string" ? conn.menu : typeof conn.menu == "object" ? _text : "";
-    let replace = {
-      "%": "%",
+      ...tags.map(tag => header.replace(/%category/g, tag.toUpperCase()) + '\n' + help
+        .filter(menu => menu.tags && menu.tags.includes(tag) && menu.help)
+        .map(menu => menu.help
+          .map(help => body
+            .replace(/%cmd/g, menu.prefix ? help : `%_p${help}`)
+            .replace(/%islimit/g, menu.limit ? 'Ⓛ' : '')
+            .replace(/%isPremium/g, menu.premium ? '🅟' : '')
+            .trim()
+          ).join('\n')
+        ).join('\n') + footer
+      ),
+      after,
+    ].join('\n\n');
+    const replace = {
+      '%': '%',
       p: _p,
       uptime,
       muptime,
       me: conn.getName(conn.user.jid),
       npmname: _package.name,
-      npmdesc: _package.description,
+      npmdesc: __package.description,
       version: _package.version,
       exp: exp - min,
       maxexp: xp,
       totalexp: exp,
       xp4levelup: max - exp,
-      github: _package.homepage ? _package.homepage.url || _package.homepage : "[unknown github url]",
+      github: _package.homepage ? _package.homepage.url || _package.homepage : '[unknown github url]',
       tag,
       ucpn,
-      platform: "Digital Wonderland",
+      platform: 'Digital Wonderland',
       mode,
       _p,
       credit,
       age,
-      tag,
       name,
       prems,
       level,
       limit,
-      name,
       totalreg,
       totalfeatures,
       role,
-      readmore: readMore,
+      readmore: String.fromCharCode(8206).repeat(4001),
     };
-    text = text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join`|`})`, "g"), (_, name) => "" + replace[name]);
-    const pp = './Assets/Gurulogo.jpg';
-
-    let contact = {
-      key: {
-        fromMe: false,
-        participant: `${m.sender.split`@`[0]}@s.whatsapp.net`,
-        ...(m.chat ? {
-          remoteJid: '0@s.whatsapp.net'
-        } : {})
-      },
-      message: {
-        contactMessage: {
-          displayName: `${name}`,
-          vcard: `BEGIN:VCARD\nVERSION:3.0\nN:;a,;;;\nFN:${name}\nitem1.TEL;waid=${m.sender.split('@')[0]}:${m.sender.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`
-        }
-      }
-    };
-
-    conn.sendMessage(m.chat, {
-      video: {
-        url: menuvid
-      },
-      caption: text.trim(),
-      gifPlayback: true,
-      gifAttribution: 0
-    }, {
-      quoted: contact
-    });
+    const caption = text.trim().replace(/%([%puptimecrdnameCATEGORY]+)/g, (_, name) => replace[name]);
+    
+    conn.sendMessage(m.chat, { video: { url: menuvid }, caption, gifPlayback: true, gifAttribution: 0 }, { quoted: contact });
 
   } catch (e) {
-    await conn.reply(m.chat, "😵 Oops! Something went wrong.", m);
+    console.error(e);
+    await conn.reply(m.chat, '😵 Oops! Something went wrong.', m);
     throw e;
   }
 };
@@ -212,45 +139,18 @@ handler.command = /^(menu|help|\?)$/i;
 
 export default handler;
 
-function pickRandom(list) {
-  return list[Math.floor(Math.random() * list.length)];
-}
-
-const more = String.fromCharCode(8206);
-const readMore = more.repeat(4001);
-
 function clockString(ms) {
-  let h = isNaN(ms) ? "--" : Math.floor(ms / 3600000);
-  let m = isNaN(ms) ? "--" : Math.floor(ms / 60000) % 60;
-  let s = isNaN(ms) ? "--" : Math.floor(ms / 1000) % 60;
-  return [h, " H ", m, " M ", s, " S "].map(v => v.toString().padStart(2, 0)).join("");
-}
-
-function clockStringP(ms) {
-  let ye = isNaN(ms) ? "--" : Math.floor(ms / 31104000000) % 10;
-  let mo = isNaN(ms) ? "--" : Math.floor(ms / 2592000000) % 12;
-  let d = isNaN(ms) ? "--" : Math.floor(ms / 86400000) % 30;
-  let h = isNaN(ms) ? "--" : Math.floor(ms / 3600000) % 24;
-  let m = isNaN(ms) ? "--" : Math.floor(ms / 60000) % 60;
-  let s = isNaN(ms) ? "--" : Math.floor(ms / 1000) % 60;
-  return [ye, " *Years 🗓️*\n", mo, " *Month 🌙*\n", d, " *Days ☀️*\n", h, " *Hours 🕐*\n", m, " *Minute ⏰*\n", s, " *Second ⏱️*"].map(v => v.toString().padStart(2, 0)).join("");
+  if (isNaN(ms)) return Array(6).fill('--').map(v => v.padStart(2, 0)).join(' ');
+  const [h, m, s] = [ms / 3600000, ms / 60000 % 60, ms / 1000 % 60].map(v => Math.floor(v));
+  return [h, 'H', m, 'M', s, 'S'].map(v => v.toString().padStart(2, 0)).join(' ');
 }
 
 function ucapan() {
-  const time = moment.tz("Asia/Karachi").format("HH");
-  let res = "😄 Good morning!";
-  if (time >= 4) {
-    res = "😎 Good Morning!";
+  const time = moment.tz('Asia/Karachi').format('HH');
+  if (time >= 18) return '🌙 Good Night!';
+  if (time >= 15) return '🌇 Good Afternoon!';
+  if (time >= 11) return '🌞 Good Afternoon!';
+  if (time >= 4) return '😎 Good Morning!';
+  return '😄 Good morning!';
   }
-  if (time >= 11) {
-    res = "🌞 Good Afternoon!";
-  }
-  if (time >= 15) {
-    res = "🌇 Good Afternoon!";
-  }
-  if (time >= 18) {
-    res = "🌙 Good Night!";
-  }
-  return res;
-        }
-                                    
+  
