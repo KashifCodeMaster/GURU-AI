@@ -47,7 +47,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
                     `👀 *@${m.sender.split('@')[0]}* is breaking the sound barrier with their admin-level spamming! Can you hear it? 🎶🔊`
                 ];
 
-                conn.reply(m.chat, getRandomMessage(adminSpamMessages), m);
+                conn.reply(m.chat, getRandomMessage(adminSpamMessages), m, { mentions: [m.sender] });
             } else {
                 // If a non-admin user is spamming, remove them (similar to antilink removal).
                 console.log(`[Anti-Spam] Non-admin user is spamming. Removing...`);
@@ -231,7 +231,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
     `👑 Royal spammer! *@${m.sender.split('@')[0]}* declared themselves king of spam. Kicked out for a dethroned exit! 👑🚪`
 
        ];                  
-                await conn.reply(m.chat, getRandomMessage(userSpamMessages), m);
+                await conn.reply(m.chat, getRandomMessage(userSpamMessages), m, { mentions: [m.sender] });
                 await conn.sendMessage(m.chat, { delete: m.key });
                 await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove');
 
