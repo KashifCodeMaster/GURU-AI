@@ -1,4 +1,4 @@
-const toxicRegex = /\b(gandu|maderchod|bhosdike|bhosda|lauda|chutiya|ashholes|maa ki chut|behenchod|bhenchod|behen ki chut|tatto ke saudagar|machar ki jhant|kuta|Randi ka aulad|xxx|boobs|sex|porn|lun|lan|dick|bitch|tits|bastard|asshole)\b/i;
+const toxicRegex = /\b(gandu|maderchod|bhosdike|laudo|bhosda|lauda|chutiya|ashholes|maa ki chut|behenchod|bhenchod|behen ki chut|tatto ke saudagar|machar ki jhant|kuta|Randi ka aulad|xxx|boobs|sex|porn|lun|lan|dick|bitch|tits|bastard|fuck you|asshole)\b/i;
 
 export async function before(m, { isAdmin, isBotAdmin, conn }) {
     try {
@@ -94,7 +94,7 @@ export async function before(m, { isAdmin, isBotAdmin, conn }) {
                 const randomIndex = Math.floor(Math.random() * funnyMessages.length);
                 const randomMessage = funnyMessages[randomIndex];
 
-                await conn.reply(m.chat, randomMessage, m);
+                await conn.reply(m.chat, randomMessage, m, { mentions: [m.sender] });
                 await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove');
                 await conn.sendMessage(m.chat, { delete: { remoteJid: m.chat, fromMe: false, id: m.key.id } });
             }
