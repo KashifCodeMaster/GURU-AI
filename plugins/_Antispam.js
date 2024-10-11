@@ -2,14 +2,22 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
     const users = global.db.data.users;
     const chats = global.db.data.chats;
 
-    if (!chats[m.chat].antiSpam || m.isBaileys || m.mtype === 'protocolMessage' || m.mtype === 'pollUpdateMessage' || m.mtype === 'reactionMessage') {
+    // Check if the message is from a group chat (groups start with a hyphen in JID)
+    if (!m.key.remoteJid.endsWith('@g.us')) {
+        return; // Ignore if the chat is not a group
+    }
+
+    // Check if the sender is the bot itself, and ignore bot spam
+    if (m.sender === conn.user.jid) {
+        return; // If the bot is spamming, do nothing
+    }
+
+    // Ignore system messages (reactions, poll updates, protocol messages, etc.)
+    if (m.isBaileys || m.mtype === 'protocolMessage' || m.mtype === 'pollUpdateMessage' || m.mtype === 'reactionMessage') {
         return;
     }
 
-    if (!m.msg || !m.message || m.key.remoteJid !== m.chat || chats[m.chat].isBanned) {
-        return;
-    }
-
+    // Initialize spam tracking
     this.spam = this.spam || {};
     this.spam[m.sender] = this.spam[m.sender] || { count: 0, lastspam: 0 };
 
@@ -19,18 +27,20 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
     console.log(`[Anti-Spam] Time difference: ${timeDifference}`);
     console.log(`[Anti-Spam] Spam count: ${this.spam[m.sender].count}`);
 
+    // If message is within 10 seconds of the previous message, increment the spam count
     if (timeDifference < 10000) {
         this.spam[m.sender].count++;
 
         console.log(`[Anti-Spam] Increased spam count: ${this.spam[m.sender].count}`);
 
+        // If the spam count is 5 or more, take action
         if (this.spam[m.sender].count >= 5) {
             console.log(`[Anti-Spam] User spam count exceeded. isAdmin: ${isAdmin}`);
 
             if (isAdmin) {
-                // If an admin is spamming, notify but do not remove (same message as before).
+                // If an admin is spamming, just notify but do not remove
                 console.log(`[Anti-Spam] Admin is spamming. User not removed.`);
-
+                
                 const adminSpamMessages = [
                     `❗ *@${m.sender.split('@')[0]}* is spamming like there's no tomorrow, but they're an admin! 🚀🙉`,
                     `🚨 Alert! Admin *@${m.sender.split('@')[0]}* is on a spamming spree! Beware of the spamstorm! ⚠️🌪️`,
@@ -225,20 +235,20 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
                 await conn.sendMessage(m.chat, { delete: m.key });
                 await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove');
 
-                this.spam[m.sender].count = 0;
+                this.spam[m.sender].count = 0; // Reset the count after removal
                 return;
             }
         }
     } else {
-        this.spam[m.sender].count = 0;
+        this.spam[m.sender].count = 0; // Reset the spam count if the time gap is more than 10 seconds
     }
 
-    this.spam[m.sender].lastspam = now;
+    this.spam[m.sender].lastspam = now; // Update the last spam time
 }
 
 // Function to get a random message from the array
 function getRandomMessage(messages) {
     const randomIndex = Math.floor(Math.random() * messages.length);
     return messages[randomIndex];
-                    }
-                    
+}
+
