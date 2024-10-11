@@ -67,7 +67,7 @@ global.APIKeys = {
 }
 
 // Sticker WM
-global.botname = process.env.BOTNAME
+global.botname = 'Silver Fox'
 global.premium = 'true'
 global.packname = 'Silver Fox'
 global.author = ''
