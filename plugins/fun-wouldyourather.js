@@ -2,7 +2,7 @@ import fetch from 'node-fetch';
 
 let handler = async (m, { conn }) => {
     try {
-        await m.react('⏳');  // React with "waiting" emoji when poll command is triggered
+        await m.react('⏳');  // React with "waiting" emoji when the poll command is triggered
         
         // Fetch "Would You Rather" poll options from the API
         const res = await fetch('https://api.popcat.xyz/wyr');
@@ -31,12 +31,20 @@ let handler = async (m, { conn }) => {
 
 // Flag to track if the hourly poll is initialized
 let hourlyPollInitialized = false;
+let lastPollTime = null;  // To track the last time a poll was sent
 
 // Function to send the poll automatically to the Hotline group every hour
 async function sendHourlyPoll(conn) {
-    try {
-        const groupJid = '120363099626473994@g.us';  // Hotline group JID
+    const groupJid = '120363099626473994@g.us';  // Hotline group JID
+    const now = new Date();
 
+    // Check if a poll has already been sent in the last hour
+    if (lastPollTime && (now - lastPollTime < 60 * 60 * 1000)) {
+        console.log('Poll already sent within the last hour. Skipping this poll.');
+        return; // Exit if a poll was sent within the last hour
+    }
+
+    try {
         // Fetch poll options from the API
         const res = await fetch('https://api.popcat.xyz/wyr');
         const pollData = await res.json();
@@ -56,6 +64,9 @@ async function sendHourlyPoll(conn) {
         await conn.sendMessage(groupJid, { poll: pollMessage });
         console.log('Sent automatic poll to Hotline group.');
 
+        // Update last poll time
+        lastPollTime = now;
+
     } catch (err) {
         console.error('Failed to send hourly poll:', err);
     }
@@ -69,7 +80,7 @@ function scheduleHourlyPoll(conn) {
 
     const now = new Date();
     const minutesTillNextHour = (60 - now.getMinutes()) * 60 * 1000 - now.getSeconds() * 1000;
-    
+
     // Set the first poll to start exactly on the next hour
     setTimeout(() => {
         sendHourlyPoll(conn);  // Send the first poll
