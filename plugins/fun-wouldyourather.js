@@ -1,55 +1,20 @@
 import fetch from 'node-fetch';
 
-let handler = async (m, { conn }) => {
+let lastPollHour = null;  // Track the last hour a poll was sent
+
+// Predefined poll hours (24-hour format)
+const pollHours = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
+
+// Function to send the Would You Rather poll
+async function sendWyrPoll(conn) {
     try {
-        await m.react('⏳');  // React with "waiting" emoji when the poll command is triggered
-        
-        // Fetch "Would You Rather" poll options from the API
-        const res = await fetch('https://api.popcat.xyz/wyr');
-        const pollData = await res.json();
+        const groupJid = '120363099626473994@g.us';  // Hotline group JID
 
-        // Prepare poll with the fetched options
-        const pollMessage = {
-            name: '*Would you rather*',
-            values: [
-                pollData.ops1.toLowerCase(),
-                pollData.ops2.toLowerCase(),
-            ],
-            multiselect: false,
-            selectableCount: 1,
-        };
-
-        // Send the poll
-        await conn.sendMessage(m.chat, { poll: pollMessage });
-        await m.react('🗳️');  // React with "poll" emoji after sending poll
-
-    } catch (err) {
-        console.error(err);
-        throw 'Something went wrong with the poll, please try again!';
-    }
-};
-
-// Flag to track if the hourly poll is initialized
-let hourlyPollInitialized = false;
-let lastPollTime = null;  // To track the last time a poll was sent
-
-// Function to send the poll automatically to the Hotline group every hour
-async function sendHourlyPoll(conn) {
-    const groupJid = '120363099626473994@g.us';  // Hotline group JID
-    const now = new Date();
-
-    // Check if a poll has already been sent in the last hour
-    if (lastPollTime && (now - lastPollTime < 60 * 60 * 1000)) {
-        console.log('Poll already sent within the last hour. Skipping this poll.');
-        return; // Exit if a poll was sent within the last hour
-    }
-
-    try {
         // Fetch poll options from the API
         const res = await fetch('https://api.popcat.xyz/wyr');
         const pollData = await res.json();
 
-        // Create the poll message
+        // Prepare poll message
         const pollMessage = {
             name: '*Would you rather*',
             values: [
@@ -62,38 +27,71 @@ async function sendHourlyPoll(conn) {
 
         // Send the poll to the specific group (Hotline)
         await conn.sendMessage(groupJid, { poll: pollMessage });
-        console.log('Sent automatic poll to Hotline group.');
+        console.log('Poll sent successfully at the correct time.');
 
-        // Update last poll time
-        lastPollTime = now;
+        // Update the last poll hour to the current hour
+        const now = new Date();
+        lastPollHour = now.getHours();
 
     } catch (err) {
         console.error('Failed to send hourly poll:', err);
     }
 }
 
-// Set up automatic poll sending exactly at the start of every hour
-function scheduleHourlyPoll(conn) {
-    if (hourlyPollInitialized) return;  // Prevent re-initialization
-
-    hourlyPollInitialized = true;  // Mark as initialized
-
+// Function to check if it's the correct time to send a poll
+function checkTimeForPoll(conn) {
     const now = new Date();
-    const minutesTillNextHour = (60 - now.getMinutes()) * 60 * 1000 - now.getSeconds() * 1000;
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
 
-    // Set the first poll to start exactly on the next hour
-    setTimeout(() => {
-        sendHourlyPoll(conn);  // Send the first poll
-        setInterval(() => sendHourlyPoll(conn), 60 * 60 * 1000);  // Continue sending polls every hour
-    }, minutesTillNextHour);
+    // Check if the current hour is in the pollHours list and no poll has been sent this hour
+    if (pollHours.includes(currentHour) && currentMinute === 0 && currentHour !== lastPollHour) {
+        sendWyrPoll(conn);  // Send poll at the start of the hour if not already sent
+    }
 }
 
-// Export the manual handler
+// Set a recurring check every minute to see if it's time to send the poll
+function schedulePredefinedPolls(conn) {
+    setInterval(() => {
+        checkTimeForPoll(conn);  // Check the time every minute
+    }, 60 * 1000);  // 1 minute in milliseconds
+}
+
+// Export the manual handler for WYR command
+let handler = async (m, { conn }) => {
+    try {
+        await m.react('⏳');  // React with a waiting emoji when poll command is triggered
+
+        // Fetch "Would You Rather" poll options from the API
+        const res = await fetch('https://api.popcat.xyz/wyr');
+        const pollData = await res.json();
+
+        // Prepare poll message
+        const pollMessage = {
+            name: '*Would you rather*',
+            values: [
+                pollData.ops1.toLowerCase(),
+                pollData.ops2.toLowerCase(),
+            ],
+            multiselect: false,
+            selectableCount: 1,
+        };
+
+        // Send the poll
+        await conn.sendMessage(m.chat, { poll: pollMessage });
+        await m.react('🗳️');  // React with poll emoji after sending the poll
+
+    } catch (err) {
+        console.error(err);
+        throw 'Something went wrong with the poll, please try again!';
+    }
+};
+
 handler.help = ['wouldyourather'];
 handler.tags = ['fun'];
 handler.command = /^wyr$/i;
 
 export default handler;
 
-// Start the automatic poll schedule when the bot starts
-scheduleHourlyPoll(conn);  // Pass the connection object (conn) to start scheduling
+// Ensure to schedule the automatic poll when the bot starts
+schedulePredefinedPolls(conn);  // Ensure conn is properly defined in your context
