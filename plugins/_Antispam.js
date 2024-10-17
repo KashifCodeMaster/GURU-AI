@@ -2,44 +2,31 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
     const users = global.db.data.users;
     const chats = global.db.data.chats;
 
-    // Check if the message is from a group chat (groups start with a hyphen in JID)
-    if (!m.key.remoteJid.endsWith('@g.us')) {
-        return; // Ignore if the chat is not a group
-    }
-
-    // Check if the sender is the bot itself, and ignore bot spam
-    if (m.sender === conn.user.jid) {
-        return; // If the bot is spamming, do nothing
-    }
-
-    // Ignore system messages (reactions, poll updates, protocol messages, etc.)
-    if (m.isBaileys || m.mtype === 'protocolMessage' || m.mtype === 'pollUpdateMessage' || m.mtype === 'reactionMessage') {
+    // Initial Checks and Message Filtering (as per version 1)
+    if (!m.isGroup || !chats[m.chat].antiSpam || m.isBaileys || m.mtype === 'protocolMessage' || m.mtype === 'pollUpdateMessage' || m.mtype === 'reactionMessage') {
         return;
     }
 
-    // Initialize spam tracking
+    // Ensuring message exists and isn't from a banned chat (from version 2)
+    if (!m.msg || !m.message || chats[m.chat].isBanned) {
+        return;
+    }
+
+    // Initialize spam object (as per version 2, streamlined)
     this.spam = this.spam || {};
     this.spam[m.sender] = this.spam[m.sender] || { count: 0, lastspam: 0 };
 
     const now = performance.now();
     const timeDifference = now - this.spam[m.sender].lastspam;
 
-    console.log(`[Anti-Spam] Time difference: ${timeDifference}`);
-    console.log(`[Anti-Spam] Spam count: ${this.spam[m.sender].count}`);
-
-    // If message is within 10 seconds of the previous message, increment the spam count
-    if (timeDifference < 10000) {
+    // Handling spam count (streamlined, as per version 2 but checking bot permissions as per version 1)
+    if (timeDifference < 10000) { // Less than 10 seconds between messages
         this.spam[m.sender].count++;
 
-        console.log(`[Anti-Spam] Increased spam count: ${this.spam[m.sender].count}`);
-
-        // If the spam count is 5 or more, take action
+        // If the spam count exceeds the limit (5 messages)
         if (this.spam[m.sender].count >= 5) {
-            console.log(`[Anti-Spam] User spam count exceeded. isAdmin: ${isAdmin}`);
-
             if (isAdmin) {
-                // If an admin is spamming, just notify but do not remove
-                console.log(`[Anti-Spam] Admin is spamming. User not removed.`);
+                // Admin spamming, no removal, just notify
                 
                 const adminSpamMessages = [
                     `❗ *@${m.sender.split('@')[0]}* is spamming like there's no tomorrow, but they're an admin! 🚀🙉`,
@@ -48,9 +35,9 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
                 ];
 
                 conn.reply(m.chat, getRandomMessage(adminSpamMessages), m, { mentions: [m.sender] });
-            } else {
-                // If a non-admin user is spamming, remove them (similar to antilink removal).
-                console.log(`[Anti-Spam] Non-admin user is spamming. Removing...`);
+             } else {
+                if (isBotAdmin) { // Only remove if the bot has admin permissions
+                    // Non-admin spamming, remove from the group
 
                 const userSpamMessages = [
                     `🚫 Houston, I've detected a spammer! 👀\n\n*@${m.sender.split('@')[0]}* is floating away from this group. Over and out! 🚀🌎`,
@@ -231,19 +218,23 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
     `👑 Royal spammer! *@${m.sender.split('@')[0]}* declared themselves king of spam. Kicked out for a dethroned exit! 👑🚪`
 
        ];                  
-                await conn.reply(m.chat, getRandomMessage(userSpamMessages), m, { mentions: [m.sender] });
-                await conn.sendMessage(m.chat, { delete: m.key });
-                await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove');
+                await conn.reply(m.chat, getRandomMessage(userSpamMessages), m);
+                    await conn.sendMessage(m.chat, { delete: m.key });
+                    await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove');
+                }
 
-                this.spam[m.sender].count = 0; // Reset the count after removal
+                // Reset spam count after action
+                this.spam[m.sender].count = 0;
                 return;
             }
         }
     } else {
-        this.spam[m.sender].count = 0; // Reset the spam count if the time gap is more than 10 seconds
+        // Reset count if time difference between messages is greater than 10 seconds
+        this.spam[m.sender].count = 0;
     }
 
-    this.spam[m.sender].lastspam = now; // Update the last spam time
+    // Update lastspam to the current time
+    this.spam[m.sender].lastspam = now;
 }
 
 // Function to get a random message from the array
@@ -251,4 +242,3 @@ function getRandomMessage(messages) {
     const randomIndex = Math.floor(Math.random() * messages.length);
     return messages[randomIndex];
 }
-
