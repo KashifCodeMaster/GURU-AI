@@ -1,11 +1,19 @@
 export async function before(m, { conn, isAdmin, isBotAdmin }) {
-    const users = global.db.data.users;
-    const chats = global.db.data.chats;
+   export async function before(m, { conn, isAdmin, isBotAdmin }) {
+    const users = global.db.data.users; // Retain this in case other systems use it
+    const chats = global.db.data.chats; // Retain this in case other systems use it
 
-    if (!chats[m.chat].antiSpam || m.isBaileys || m.mtype === 'protocolMessage' || m.mtype === 'pollUpdateMessage' || m.mtype === 'reactionMessage') {
+    // New condition: Only work in groups, and don't act if the bot itself is spamming
+    if (!m.isGroup || m.sender === conn.user.jid) {
         return;
     }
 
+    // Ignore non-message events, but do not ignore stickers or media
+    if (m.isBaileys || m.mtype === 'protocolMessage' || m.mtype === 'pollUpdateMessage' || m.mtype === 'reactionMessage') {
+        return;
+    }
+
+    // No need for chat-specific 'antiSpam' check anymore, action will be taken in all groups
     if (!m.msg || !m.message || m.key.remoteJid !== m.chat || chats[m.chat].isBanned) {
         return;
     }
@@ -28,7 +36,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
             console.log(`[Anti-Spam] User spam count exceeded. isAdmin: ${isAdmin}`);
 
             if (isAdmin) {
-                // If an admin is spamming, notify but do not remove (same message as before).
+                // Admin is spamming, notify but don't remove
                 console.log(`[Anti-Spam] Admin is spamming. User not removed.`);
 
                 const adminSpamMessages = [
@@ -37,9 +45,10 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
                     `👀 *@${m.sender.split('@')[0]}* is breaking the sound barrier with their admin-level spamming! Can you hear it? 🎶🔊`
                 ];
 
-                conn.reply(m.chat, getRandomMessage(adminSpamMessages), m);
+                // Add mentions array to correctly mention the user
+                conn.reply(m.chat, getRandomMessage(adminSpamMessages), m, { mentions: [m.sender] });
             } else {
-                // If a non-admin user is spamming, remove them (similar to antilink removal).
+                // Non-admin user is spamming, remove them
                 console.log(`[Anti-Spam] Non-admin user is spamming. Removing...`);
 
                 const userSpamMessages = [
@@ -221,7 +230,8 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
     `👑 Royal spammer! *@${m.sender.split('@')[0]}* declared themselves king of spam. Kicked out for a dethroned exit! 👑🚪`
 
        ];                  
-                await conn.reply(m.chat, getRandomMessage(userSpamMessages), m);
+                // Add mentions array to correctly mention the user
+                await conn.reply(m.chat, getRandomMessage(userSpamMessages), m, { mentions: [m.sender] });
                 await conn.sendMessage(m.chat, { delete: m.key });
                 await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove');
 
@@ -240,5 +250,4 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
 function getRandomMessage(messages) {
     const randomIndex = Math.floor(Math.random() * messages.length);
     return messages[randomIndex];
-                    }
-                    
+}
