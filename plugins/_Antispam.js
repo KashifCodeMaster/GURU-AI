@@ -2,42 +2,45 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
     const users = global.db.data.users;
     const chats = global.db.data.chats;
 
-    // Initial Checks and Message Filtering (as per version 1)
-    if (!m.isGroup || !chats[m.chat].antiSpam || m.isBaileys || m.mtype === 'protocolMessage' || m.mtype === 'pollUpdateMessage' || m.mtype === 'reactionMessage') {
+    if (!chats[m.chat].antiSpam || m.isBaileys || m.mtype === 'protocolMessage' || m.mtype === 'pollUpdateMessage' || m.mtype === 'reactionMessage') {
         return;
     }
 
-    // Ensuring message exists and isn't from a banned chat (from version 2)
-    if (!m.msg || !m.message || chats[m.chat].isBanned) {
+    if (!m.msg || !m.message || m.key.remoteJid !== m.chat || chats[m.chat].isBanned) {
         return;
     }
 
-    // Initialize spam object (as per version 2, streamlined)
     this.spam = this.spam || {};
     this.spam[m.sender] = this.spam[m.sender] || { count: 0, lastspam: 0 };
 
     const now = performance.now();
     const timeDifference = now - this.spam[m.sender].lastspam;
 
-    // Handling spam count (streamlined, as per version 2 but checking bot permissions as per version 1)
-    if (timeDifference < 10000) { // Less than 10 seconds between messages
+    console.log(`[Anti-Spam] Time difference: ${timeDifference}`);
+    console.log(`[Anti-Spam] Spam count: ${this.spam[m.sender].count}`);
+
+    if (timeDifference < 10000) {
         this.spam[m.sender].count++;
 
-        // If the spam count exceeds the limit (5 messages)
+        console.log(`[Anti-Spam] Increased spam count: ${this.spam[m.sender].count}`);
+
         if (this.spam[m.sender].count >= 5) {
+            console.log(`[Anti-Spam] User spam count exceeded. isAdmin: ${isAdmin}`);
+
             if (isAdmin) {
-                // Admin spamming, no removal, just notify
-                
+                // If an admin is spamming, notify but do not remove (same message as before).
+                console.log(`[Anti-Spam] Admin is spamming. User not removed.`);
+
                 const adminSpamMessages = [
                     `❗ *@${m.sender.split('@')[0]}* is spamming like there's no tomorrow, but they're an admin! 🚀🙉`,
                     `🚨 Alert! Admin *@${m.sender.split('@')[0]}* is on a spamming spree! Beware of the spamstorm! ⚠️🌪️`,
                     `👀 *@${m.sender.split('@')[0]}* is breaking the sound barrier with their admin-level spamming! Can you hear it? 🎶🔊`
                 ];
 
-                conn.reply(m.chat, getRandomMessage(adminSpamMessages), m, { mentions: [m.sender] });
-             } else {
-                if (isBotAdmin) { // Only remove if the bot has admin permissions
-                    // Non-admin spamming, remove from the group
+                conn.reply(m.chat, getRandomMessage(adminSpamMessages), m);
+            } else {
+                // If a non-admin user is spamming, remove them (similar to antilink removal).
+                console.log(`[Anti-Spam] Non-admin user is spamming. Removing...`);
 
                 const userSpamMessages = [
                     `🚫 Houston, I've detected a spammer! 👀\n\n*@${m.sender.split('@')[0]}* is floating away from this group. Over and out! 🚀🌎`,
@@ -219,21 +222,17 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
 
        ];                  
                 await conn.reply(m.chat, getRandomMessage(userSpamMessages), m);
-                    await conn.sendMessage(m.chat, { delete: m.key });
-                    await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove');
-                }
+                await conn.sendMessage(m.chat, { delete: m.key });
+                await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove');
 
-                // Reset spam count after action
                 this.spam[m.sender].count = 0;
                 return;
             }
         }
     } else {
-        // Reset count if time difference between messages is greater than 10 seconds
         this.spam[m.sender].count = 0;
     }
 
-    // Update lastspam to the current time
     this.spam[m.sender].lastspam = now;
 }
 
@@ -241,4 +240,5 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
 function getRandomMessage(messages) {
     const randomIndex = Math.floor(Math.random() * messages.length);
     return messages[randomIndex];
-}
+                    }
+                    
