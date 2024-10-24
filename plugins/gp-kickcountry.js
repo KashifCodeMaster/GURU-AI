@@ -1,17 +1,21 @@
-let handler = async (m, { conn, participants, args, usedPrefix }) => {
+let handler = async (m, { conn, args, usedPrefix, participants, groupMetadata }) => {
     // Check if a country code is provided
     if (!args[0]) {
         await m.react('🚫'); // React with a stop emoji
         return m.reply(`🚫 Whoa there! You forgot to give me a country code! For example: ${usedPrefix}removecountry 92`);
     }
 
-    const countryCode = args[0]; // Get the country code from the command
-    const countryPrefix = `+${countryCode}`; // Create the full prefix for the phone numbers
+    const countryCode = args[0].trim(); // Get the country code from the command
+    const countryPrefix = countryCode.startsWith('+') ? countryCode : `+${countryCode}`; // Ensure we have the full prefix format
 
     // Filter participants to find those with the specified country code, excluding admins
-    const membersToRemove = participants.filter(participant => 
-        participant.id.startsWith(countryPrefix) && !participant.admin
-    );
+    const membersToRemove = participants.filter(participant => {
+        const phoneNumber = participant.id.split('@')[0]; // Extract the phone number from the jid
+        return phoneNumber.startsWith(countryCode) && !participant.admin; // Check if the phone number starts with the country code
+    });
+
+    // Log the number of members to be removed for basic info
+    console.log(`Total participants checked: ${participants.length}, Members to remove: ${membersToRemove.length}`);
 
     // Check if any members are found for removal
     if (membersToRemove.length === 0) {
@@ -33,11 +37,6 @@ let handler = async (m, { conn, participants, args, usedPrefix }) => {
     // Fun confirmation message
     m.reply(`🎉 Voilà! All members with the country code ${countryCode} have been sent packing one by one! ✈️ Hopefully, they don't miss the party too much! 🎊`);
 };
-
-// Function to sleep for a specified duration
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 handler.help = ['removecountry <country code>'];
 handler.tags = ['group'];
