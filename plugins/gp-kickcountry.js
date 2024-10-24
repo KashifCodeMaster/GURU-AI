@@ -1,7 +1,8 @@
 let handler = async (m, { conn, participants, args }) => {
     // Check if a country code is provided
     if (!args[0]) {
-        return m.reply('🚫 Whoa there! You forgot to give me a country code! For example: !removecountry 92');
+        await m.react('🚫'); // React with a stop emoji
+        return m.reply('Whoa there! You forgot to give me a country code! For example: !removecountry 92');
     }
 
     const countryCode = args[0]; // Get the country code from the command
@@ -14,7 +15,8 @@ let handler = async (m, { conn, participants, args }) => {
 
     // Check if any members are found for removal
     if (membersToRemove.length === 0) {
-        return m.reply(`✅ Looks like no one with the country code ${countryCode} is here! Maybe they’re on a vacation? 🏖️`);
+        await m.react('✅'); // React with a tick emoji for no removals
+        return m.reply(`Looks like no one with the country code ${countryCode} is here! Maybe they’re on a vacation? 🏖️`);
     }
 
     // React with a waiting emoji
@@ -40,7 +42,7 @@ function sleep(ms) {
 
 handler.help = ['removecountry <country code>'];
 handler.tags = ['group'];
-handler.command = ['removecountry', 'removebycountry'];
+handler.command = ['removecountry', 'removeByCountryCode'];
 handler.admin = true; // Only allow admins to use this command
 handler.botAdmin = true; // Ensure the bot is an admin
 handler.group = true; // Only allow use in groups
