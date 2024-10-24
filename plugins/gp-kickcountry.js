@@ -22,17 +22,16 @@ let handler = async (m, { conn, participants, args, usedPrefix }) => {
     // React with a waiting emoji
     await m.react('⏳'); // React with a waiting emoji
 
-    // Delay to allow the user to read the message
-    await sleep(2000);
-
-    // Remove the identified members without notifying them
-    await conn.groupParticipantsUpdate(m.chat, membersToRemove.map(v => v.id), 'remove');
+    // Loop through each member and remove them one by one
+    for (const member of membersToRemove) {
+        await conn.groupParticipantsUpdate(m.chat, [member.id], 'remove');
+    }
 
     // React with a tick emoji to confirm completion
     await m.react('✅'); // React with a tick emoji
 
     // Fun confirmation message
-    m.reply(`🎉 Voilà! All members with the country code ${countryCode} have been sent packing! ✈️ Hopefully, they don't miss the party too much! 🎊`);
+    m.reply(`🎉 Voilà! All members with the country code ${countryCode} have been sent packing one by one! ✈️ Hopefully, they don't miss the party too much! 🎊`);
 };
 
 // Function to sleep for a specified duration
