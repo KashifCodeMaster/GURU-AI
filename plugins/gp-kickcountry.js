@@ -1,8 +1,8 @@
-let handler = async (m, { conn, participants, args }) => {
+let handler = async (m, { conn, participants, args, usedPrefix }) => {
     // Check if a country code is provided
     if (!args[0]) {
         await m.react('🚫'); // React with a stop emoji
-        return m.reply('Whoa there! You forgot to give me a country code! For example: !removecountry 92');
+        return m.reply(`🚫 Whoa there! You forgot to give me a country code! For example: ${usedPrefix}removecountry 92`);
     }
 
     const countryCode = args[0]; // Get the country code from the command
@@ -16,7 +16,7 @@ let handler = async (m, { conn, participants, args }) => {
     // Check if any members are found for removal
     if (membersToRemove.length === 0) {
         await m.react('✅'); // React with a tick emoji for no removals
-        return m.reply(`Looks like no one with the country code ${countryCode} is here! Maybe they’re on a vacation? 🏖️`);
+        return m.reply(`✅ Looks like no one with the country code ${countryCode} is here! Maybe they’re on a vacation? 🏖️`);
     }
 
     // React with a waiting emoji
