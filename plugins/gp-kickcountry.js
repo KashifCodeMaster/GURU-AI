@@ -1,48 +1,52 @@
-let handler = async (m, { conn, args, usedPrefix, participants, groupMetadata }) => {
-    // Check if a country code is provided
+let handler = async (m, { conn, args, participants }) => {
     if (!args[0]) {
-        await m.react('🚫'); // React with a stop emoji
-        return m.reply(`🚫 Whoa there! You forgot to give me a country code! For example: ${usedPrefix}removecountry 92`);
+        await m.react('🚫');
+        return m.reply(`Oops! You forgot to give a country code! Try: ${usedPrefix}removecountry 92`);
     }
 
-    const countryCode = args[0].trim(); // Get the country code from the command
-    const countryPrefix = countryCode.startsWith('+') ? countryCode : `+${countryCode}`; // Ensure we have the full prefix format
+    const countryCode = args[0].trim();
+    const countryPrefix = countryCode.startsWith('+') ? countryCode : `+${countryCode}`;
 
-    // Filter participants to find those with the specified country code, excluding admins
-    const membersToRemove = participants.filter(participant => {
-        const phoneNumber = participant.id.split('@')[0]; // Extract the phone number from the jid
-        return phoneNumber.startsWith(countryCode) && !participant.admin; // Check if the phone number starts with the country code
-    });
+    await m.react('⏳'); // Show a loading emoji initially
 
-    // Log the number of members to be removed for basic info
-    console.log(`Total participants checked: ${participants.length}, Members to remove: ${membersToRemove.length}`);
+    let removedCount = 0;
+    let remainingMembers; // Variable to store the list of remaining members from the specified country
 
-    // Check if any members are found for removal
-    if (membersToRemove.length === 0) {
-        await m.react('✅'); // React with a tick emoji for no removals
-        return m.reply(`✅ Looks like no one with the country code ${countryCode} is here! Maybe they’re on a vacation? 🏖️`);
-    }
+    do {
+        // Find members with the specified country code who are not admins
+        remainingMembers = participants.filter(participant => {
+            const phoneNumber = participant.id.split('@')[0];
+            return phoneNumber.startsWith(countryCode) && !participant.admin;
+        });
 
-    // React with a waiting emoji
-    await m.react('⏳'); // React with a waiting emoji
+        console.log(`Attempting to remove ${remainingMembers.length} members from country code ${countryCode}...`);
 
-    // Loop through each member and remove them one by one
-    for (const member of membersToRemove) {
-        await conn.groupParticipantsUpdate(m.chat, [member.id], 'remove');
-    }
+        // Loop over each member and attempt to remove
+        for (const member of remainingMembers) {
+            try {
+                await conn.groupParticipantsUpdate(m.chat, [member.id], 'remove');
+                removedCount++;
+                console.log(`Successfully removed ${member.id}`);
+            } catch (error) {
+                console.error(`Failed to remove ${member.id}:`, error);
+                continue; // Skip to the next member if there's an error
+            }
+        }
 
-    // React with a tick emoji to confirm completion
-    await m.react('✅'); // React with a tick emoji
+        // Refresh participant list to check if any members remain
+        participants = await conn.groupMetadata(m.chat).participants;
 
-    // Fun confirmation message
-    m.reply(`🎉 Voilà! All members with the country code ${countryCode} have been sent packing one by one! ✈️ Hopefully, they don't miss the party too much! 🎊`);
+    } while (remainingMembers.length > 0); // Repeat until there are no members left with the country code
+
+    await m.react('✅');
+    m.reply(`🎉 All done! Removed ${removedCount} members with the country code ${countryCode}. The group’s now a bit less crowded! 🎊`);
 };
 
 handler.help = ['removecountry <country code>'];
 handler.tags = ['group'];
-handler.command = ['removecountry', 'removeByCountryCode'];
-handler.admin = true; // Only allow admins to use this command
-handler.botAdmin = true; // Ensure the bot is an admin
-handler.group = true; // Only allow use in groups
+handler.command = ['removecountry', 'kickcountry', 'removebycountry'];
+handler.admin = true;
+handler.botAdmin = true;
+handler.group = true;
 
 export default handler;
