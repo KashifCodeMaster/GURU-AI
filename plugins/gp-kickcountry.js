@@ -53,7 +53,7 @@ let handler = async (m, { conn, args }) => {
 
 handler.help = ['kickcountry <country code>'];
 handler.tags = ['group'];
-handler.command = ['kickcountry', 'removebycountry', 'removecountry']];
+handler.command = ['kickcountry', 'removebycountry', 'removecountry'];
 handler.admin = true;
 handler.botAdmin = true;
 handler.group = true;
