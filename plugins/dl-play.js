@@ -7,99 +7,127 @@ import { promisify } from 'util';
 import os from 'os';
 
 const streamPipeline = promisify(pipeline);
+const cooldownTime = 3 * 60 * 1000;  // 3 minutes cooldown
+let lastPlayTime = {};
 
-const handler = async (m, {
-    conn,
-    command,
-    text,
-    args,
-    usedPrefix
-}) => {
-    if (!text) throw `give a text to search Example: *${usedPrefix + command}* sefali odia song`;
-    conn.GURUPLAY = conn.GURUPLAY ? conn.GURUPLAY : {};
-    await conn.reply(m.chat, wait, m);
-    const result = await searchAndDownloadMusic(text);
-    const infoText = `✦ ──『 *GURU PLAYER* 』── ⚝ \n\n [ ⭐ Reply the number of the desired search result to get the Audio]. \n\n` ;
+const handler = async (m, { conn, command, text, args, usedPrefix }) => {
+    const sender = m.sender;
 
-const orderedLinks = result.allLinks.map((link, index) => {
-    const sectionNumber = index + 1;
-    const {
-        title,
-        url
-    } = link;
-    return `*${sectionNumber}.* ${title}`;
-});
+    // Cooldown check
+    if (lastPlayTime[sender] && Date.now() - lastPlayTime[sender] < cooldownTime) {
+        const waitTime = Math.ceil((cooldownTime - (Date.now() - lastPlayTime[sender])) / 1000);
+        await conn.reply(m.chat, `⏳ Whoa! Please wait *${waitTime} seconds* before requesting another song. Meanwhile, enjoy the tunes 🎶`, m);
+        return;
+    }
 
-    const orderedLinksText = orderedLinks.join("\n\n");
-    const fullText = `${infoText}\n\n${orderedLinksText}`;
-    const {
-        key
-    } = await conn.reply(m.chat, fullText, m);
-    conn.GURUPLAY[m.sender] = {
-        result,
-        key,
-        timeout: setTimeout(() => {
-            conn.sendMessage(m.chat, {
-                delete: key
-            });
-            delete conn.GURUPLAY[m.sender];
-        }, 150 * 1000),
+    if (!text) throw `Please type a song to search, e.g., *${usedPrefix + command}* Imagine Dragons`;
+
+    conn.MUSICPLAYER = conn.MUSICPLAYER || {};
+    await m.react('🔍');
+    let searchMsg = await conn.sendMessage(m.chat, { text: "🎵 Searching for the perfect vibes... Hold tight!" }, { quoted: m });
+
+    // Message editing function
+    const updateSearchMessage = async (newText) => {
+        await conn.relayMessage(m.chat, {
+            protocolMessage: {
+                key: searchMsg.key,
+                type: 14,
+                editedMessage: { conversation: newText }
+            }
+        }, {});
     };
+
+    // Sequence of updates with proper delays
+    setTimeout(() => updateSearchMessage("🔎 Still hunting down the best tracks for you..."), 3000);
+    setTimeout(() => updateSearchMessage("🎧 Almost there! Just a moment more..."), 6000);
+
+    const result = await searchAndDownloadMusic(text);
+
+    if (!result || result.allLinks.length === 0) {
+        await conn.sendMessage(m.chat, { text: "😔 Oops, couldn't find any tracks matching that search. Try again!" }, { quoted: m });
+        return;
+    }
+
+    const infoText = `✨ Welcome to *Music Player* ✨\n\nSelect a song number from the list to play it 🎸\n\n`;
+    const orderedLinks = result.allLinks.map((link, index) => `*${index + 1}.* ${link.title}`).join("\n\n");
+    const fullText = `${infoText}\n${orderedLinks}`;
+
+    setTimeout(() => updateSearchMessage(fullText), 9000); // Shows options list after prior messages
+
+    const timeoutId = setTimeout(() => {
+        delete conn.MUSICPLAYER[sender];
+        conn.relayMessage(m.chat, {
+            protocolMessage: {
+                key: searchMsg.key,
+                type: 14,
+                editedMessage: { conversation: "🕰️ Options timed out! Request again if you need more tunes 🎶" }
+            }
+        }, {});
+    }, 45000); // Auto-delete after 45 seconds
+
+    conn.MUSICPLAYER[sender] = {
+        result,
+        key: searchMsg.key,
+        timeoutId  // Store timeout ID for cancellation if an option is selected
+    };
+
+    lastPlayTime[sender] = Date.now();
 };
 
-handler.before = async (m, {
-    conn
-}) => {
-    conn.GURUPLAY = conn.GURUPLAY ? conn.GURUPLAY : {};
-    if (m.isBaileys || !(m.sender in conn.GURUPLAY)) return;
-    const {
-        result,
-        key,
-        timeout
-    } = conn.GURUPLAY[m.sender];
-   
+handler.before = async (m, { conn }) => {
+    conn.MUSICPLAYER = conn.MUSICPLAYER || {};
+    const sender = m.sender;
+
+    if (!(sender in conn.MUSICPLAYER)) return;
+
+    const { result, key, timeoutId } = conn.MUSICPLAYER[sender];
     if (!m.quoted || m.quoted.id !== key.id || !m.text) return;
-    const choice = m.text.trim();
-    const inputNumber = Number(choice);
-    if (inputNumber >= 1 && inputNumber <= result.allLinks.length) {
-        const selectedUrl = result.allLinks[inputNumber - 1].url;
-        console.log("selectedUrl", selectedUrl)
-    let title = generateRandomName();
-        const audioStream = ytdl(selectedUrl, {
-            filter: 'audioonly',
-            quality: 'highestaudio',
-        });
-    
-      
-        
-        const tmpDir = os.tmpdir();
-        
-        
-        const writableStream = fs.createWriteStream(`${tmpDir}/${title}.mp3`);
-    
-        
-        await streamPipeline(audioStream, writableStream);
 
-        const doc = {
-            audio: {
-            url: `${tmpDir}/${title}.mp3`
-            },
-            mimetype: 'audio/mpeg',
-            ptt: false,
-            waveform: [100, 0, 0, 0, 0, 0, 100],
-            fileName: `${title}`,
-        
-        };
-    
-        await conn.sendMessage(m.chat, doc, { quoted: m });
-    
-    
-       
-
-        
-    } else {
-        m.reply("Invalid sequence number. Please select the appropriate number from the list above.\nBetween 1 to " + result.allLinks.length);
+    const choice = parseInt(m.text.trim());
+    if (!choice || choice < 1 || choice > result.allLinks.length) {
+        m.reply("🚫 Invalid choice! Please pick a number from the list.");
+        return;
     }
+
+    clearTimeout(timeoutId); // Cancel the timeout if a valid choice is made
+    await m.react('⏳');
+    await conn.relayMessage(m.chat, {
+        protocolMessage: {
+            key: key,
+            type: 14,
+            editedMessage: { conversation: "📥 Downloading your track... Please hold on!" }
+        }
+    }, {});
+
+    const selectedUrl = result.allLinks[choice - 1].url;
+    const thumbnailUrl = result.allLinks[choice - 1].thumbnail; // Get thumbnail URL
+    const title = generateRandomName();
+    const audioStream = ytdl(selectedUrl, { filter: 'audioonly', quality: 'highestaudio' });
+    const tmpDir = os.tmpdir();
+    const filePath = `${tmpDir}/${title}.mp3`;
+    const writableStream = fs.createWriteStream(filePath);
+
+    await streamPipeline(audioStream, writableStream);
+
+    const doc = {
+        audio: { url: filePath },
+        mimetype: 'audio/mpeg',
+        fileName: `${title}`,
+        jpegThumbnail: await fetchThumbnail(thumbnailUrl) // Set thumbnail
+    };
+
+    await conn.sendMessage(m.chat, doc, { quoted: m });
+    await conn.relayMessage(m.chat, {
+        protocolMessage: {
+            key: key,
+            type: 14,
+            editedMessage: {
+                conversation: `🎼 Now playing: *${result.allLinks[choice - 1].title}* - Enjoy the vibes! 🎶`
+            }
+        }
+    }, {});
+
+    delete conn.MUSICPLAYER[sender];
 };
 
 handler.help = ["play"];
@@ -108,62 +136,39 @@ handler.command = /^(play)$/i;
 handler.limit = true;
 export default handler;
 
-function formatBytes(bytes, decimals = 2) {
-    if (bytes === 0) return "0 B";
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+function generateRandomName() {
+    const adjectives = ["happy", "sad", "funny", "brave", "clever", "kind", "silly", "wise", "gentle", "bold"];
+    const nouns = ["cat", "dog", "bird", "tree", "river", "mountain", "sun", "moon", "star", "cloud"];
+    return adjectives[Math.floor(Math.random() * adjectives.length)] + "-" + nouns[Math.floor(Math.random() * nouns.length)];
 }
 
 async function searchAndDownloadMusic(query) {
     try {
         const { videos } = await yts(query);
-        if (!videos.length) return "Sorry, no video results were found for this search.";
+        if (!videos.length) return null;
 
         const allLinks = videos.map(video => ({
             title: video.title,
             url: video.url,
+            thumbnail: video.thumbnail
         }));
 
-        const jsonData = {
+        return {
             title: videos[0].title,
-            description: videos[0].description,
-            duration: videos[0].duration,
-            author: videos[0].author.name,
             allLinks: allLinks,
-            videoUrl: videos[0].url,
-            thumbnail: videos[0].thumbnail,
         };
-
-        return jsonData;
-    } catch (error) {
-        return "Error: " + error.message;
-    }
-}
-
-
-async function fetchVideoBuffer() {
-    try {
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Access-Control-Allow-Origin': '*'
-            }
-        });
-        return await response.buffer();
     } catch (error) {
         return null;
     }
 }
 
-function generateRandomName() {
-    const adjectives = ["happy", "sad", "funny", "brave", "clever", "kind", "silly", "wise", "gentle", "bold"];
-    const nouns = ["cat", "dog", "bird", "tree", "river", "mountain", "sun", "moon", "star", "cloud"];
-    
-    const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
-    const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-    
-    return randomAdjective + "-" + randomNoun;
+async function fetchThumbnail(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) return null;
+        const buffer = await response.buffer();
+        return buffer;
+    } catch {
+        return null;
+    }
 }
