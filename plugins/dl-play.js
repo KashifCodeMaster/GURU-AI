@@ -8,14 +8,14 @@ import os from 'os';
 
 const streamPipeline = promisify(pipeline);
 const cooldownTime = 3 * 60 * 1000;  // 3 minutes cooldown
-let lastPlayTime = {};
+let lastPlayTime = 0; // Global cooldown
 
 const handler = async (m, { conn, command, text, args, usedPrefix }) => {
     const sender = m.sender;
 
-    // Cooldown check
-    if (lastPlayTime[sender] && Date.now() - lastPlayTime[sender] < cooldownTime) {
-        const waitTime = Math.ceil((cooldownTime - (Date.now() - lastPlayTime[sender])) / 1000);
+    // Global cooldown check
+    if (lastPlayTime && Date.now() - lastPlayTime < cooldownTime) {
+        const waitTime = Math.ceil((cooldownTime - (Date.now() - lastPlayTime)) / 1000);
         await conn.reply(m.chat, `⏳ Whoa! Please wait *${waitTime} seconds* before requesting another song. Meanwhile, enjoy the tunes 🎶`, m);
         return;
     }
@@ -37,7 +37,7 @@ const handler = async (m, { conn, command, text, args, usedPrefix }) => {
         }, {});
     };
 
-    // Sequence of updates with proper delays
+    // Sequence of search updates with proper delays
     setTimeout(() => updateSearchMessage("🔎 Still hunting down the best tracks for you..."), 3000);
     setTimeout(() => updateSearchMessage("🎧 Almost there! Just a moment more..."), 6000);
 
@@ -71,7 +71,7 @@ const handler = async (m, { conn, command, text, args, usedPrefix }) => {
         timeoutId  // Store timeout ID for cancellation if an option is selected
     };
 
-    lastPlayTime[sender] = Date.now();
+    lastPlayTime = Date.now(); // Set global cooldown time
 };
 
 handler.before = async (m, { conn }) => {
@@ -107,7 +107,26 @@ handler.before = async (m, { conn }) => {
     const filePath = `${tmpDir}/${title}.mp3`;
     const writableStream = fs.createWriteStream(filePath);
 
-    await streamPipeline(audioStream, writableStream);
+    const downloadProgressUpdates = async () => {
+        setTimeout(() => updateDownloadProgress("🎶 25% complete… setting the vibes 🎶"), 2000);
+        setTimeout(() => updateDownloadProgress("⏳ 50% done… getting closer!"), 4000);
+        setTimeout(() => updateDownloadProgress("🚀 75% … just about ready!"), 6000);
+        setTimeout(() => updateDownloadProgress("📥 Download complete! Preparing to send…"), 8000);
+    };
+
+    const updateDownloadProgress = async (newText) => {
+        await conn.relayMessage(m.chat, {
+            protocolMessage: {
+                key: key,
+                type: 14,
+                editedMessage: { conversation: newText }
+            }
+        }, {});
+    };
+
+    // Start download and simulate progress updates
+    downloadProgressUpdates(); // Start progress updates
+    await streamPipeline(audioStream, writableStream); // Complete the download
 
     const doc = {
         audio: { url: filePath },
@@ -172,3 +191,4 @@ async function fetchThumbnail(url) {
         return null;
     }
 }
+    
