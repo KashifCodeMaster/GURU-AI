@@ -2,10 +2,10 @@ let handler = async (m, { conn, text, participants, isAdmin, isOwner, groupMetad
     let users = participants.map(u => u.id).filter(v => v !== conn.user.jid)
 
     // Construct the message with visual appeal, numbering, and emoji
-    let txt = `🌟 *Group*: *${groupMetadata.subject}*\n`
+    let txt = `🔖 *Group*: *${groupMetadata.subject}*\n`
     txt += `👥 *Members*: *${participants.length}*\n`
     if (text) txt += `💬 *Message*: ${text}\n`
-    txt += `\n*┌───⊷*  *MENTIONS*  *⊶───┐*\n`
+    txt += `\n*┌─⊷*  *MENTIONS*  *⊶─┐*\n`
 
     // Add numbered mentions with emojis (🏅 for member mention)
     txt += users.map((v, i) => `🏅 *${i + 1}* @${v.replace(/@.+/, '')}`).join("\n")
@@ -16,7 +16,7 @@ let handler = async (m, { conn, text, participants, isAdmin, isOwner, groupMetad
     }
 
     // Add a funny powered by message with the bot's name
-    txt += `\n└──✪ Powered by ${global.botname} ──✪──`
+    txt += `\n✪ Powered by ${global.botname} ✪`
 
     // Send the message with mentions
     await conn.reply(m.chat, txt, null, { mentions: users })
