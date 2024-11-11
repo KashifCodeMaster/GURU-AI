@@ -1,31 +1,36 @@
 let handler = async (m, { conn, text, participants, isAdmin, isOwner, groupMetadata }) => {
-    let users = participants.map(u => u.id).filter(v => v !== conn.user.jid)
+    // Filter out the bot's ID and gather user IDs for mentions
+    let users = participants.map(u => u.id).filter(v => v !== conn.user.jid);
 
-    // Construct the message with visual appeal, numbering, and emoji
-    let txt = `🔖 *Group*: *${groupMetadata.subject}*\n`
-    txt += `👥 *Members*: *${participants.length}*\n`
-    if (text) txt += `💬 *Message*: ${text}\n`
-    txt += `\n*┌─⊷*  *MENTIONS*  *⊶─┐*\n`
+    // Start the message with a clean, bold group info header
+    let message = `🔖 \`Group Notification\` 📌\n\n`;
+    message += `📝 *Group Name*: ${groupMetadata.subject}\n`;
+    message += `👥 *Total Members*: ${participants.length}\n`;
+    message += `✪━━━━━━━━━━━━━✪\n\n`;  // Separator line
 
-    // Add numbered mentions with emojis (🏅 for member mention)
-    txt += users.map((v, i) => `🏅 *${i + 1}* @${v.replace(/@.+/, '')}`).join("\n")
+    // Add a personalized message from admin, or provide an engaging default prompt
+    message += text
+        ? `🔹 *Admin Message*:\n${text}\n\n`
+        : `⚠️ *Reminder*:\nHey everyone! We’d love to see more activity here. So, you have been tagged because we want y'all to get active around here... Maybe it's time to stop lurking and say something, huh?\n\n`;
+    
+    message += `✪━━━━━━━━━━━━━✪\n\n`;  // Another separator for clarity
 
-    // Add a funny, sarcastic, and context-aware fallback message if no text is provided
-    if (!text) {
-        txt = `⚡ *You’ve been tagged because we want y’all to get active around here... Maybe it's time to stop lurking and say something, huh?* ⚡\n` + txt
-    }
+    // Mention all participants with a header
+    message += `📢 *Tagged Members List* 👭\n`;
+    message += users.map((user, index) => `🏅 *${index + 1}.* @${user.replace(/@.+/, '')}`).join("\n");
+    message += `\n✪━━━━━━━━━━━━━✪\n\n`;  // Separator to close the list
 
-    // Add a funny powered by message with the bot's name
-    txt += `\n✪ Powered by ${global.botname} ✪`
+    // Conclude with a friendly bot attribution footer
+    message += `🔖 *Powered by ${global.botname}* \n\n`;
 
     // Send the message with mentions
-    await conn.reply(m.chat, txt, null, { mentions: users })
-}
+    await conn.reply(m.chat, message, null, { mentions: users });
+};
 
-handler.help = ['tagall']
-handler.tags = ['group']
-handler.command = ['tagall']
-handler.admin = true
-handler.group = true
+handler.help = ['tagall'];
+handler.tags = ['group'];
+handler.command = ['tagall'];
+handler.admin = true;
+handler.group = true;
 
-export default handler
+export default handler;
