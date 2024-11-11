@@ -12,4 +12,5 @@ let handler = async (m, { conn }) => {
     handler.tags = ['main']
     handler.command = ['blocklist', 'listblock'] 
     handler.rowner = true
+    handler.owner = true
     export default handler
