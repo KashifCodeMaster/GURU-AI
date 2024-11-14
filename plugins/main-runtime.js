@@ -9,7 +9,7 @@ let handler = async (m, { conn }) => {
             process.send('uptime');
             _muptime = await new Promise((resolve) => {
                 process.once('message', resolve);
-                setTimeout(resolve, 1000);
+                setTimeout(() => resolve(0), 1000); // Fallback if no response
             }) * 1000;
         }
 
@@ -35,10 +35,8 @@ let handler = async (m, { conn }) => {
         // Add the humorous remark to the response
         response += `\n\n💬 ${randomRemark}`;
 
-        // Send the response message, quoting the original message
-        await conn.sendMessage(m.chat, {
-            text: response,
-            quoted: m,  // Referencing the original message
+        // Reply directly to the triggering message
+        await m.reply(response, null, {
             contextInfo: {
                 mentionedJid: [m.sender],
                 externalAdReply: {
@@ -51,7 +49,7 @@ let handler = async (m, { conn }) => {
     } catch (error) {
         // Handle any errors gracefully
         console.error('Error in runtime command:', error);
-        m.reply('*🚨 Uh-oh! Something went haywire in my circuits. Must be those mischievous electrons.*');
+        await m.reply('*🚨 Uh-oh! Something went haywire in my circuits. Must be those mischievous electrons.*');
     }
 };
 
@@ -60,9 +58,9 @@ function clockString(ms) {
     if (isNaN(ms)) return '--';
 
     const days = Math.floor(ms / 86400000);
-    const hours = Math.floor(ms / 3600000) % 24;
-    const minutes = Math.floor(ms / 60000) % 60;
-    const seconds = Math.floor(ms / 1000) % 60;
+    const hours = Math.floor((ms % 86400000) / 3600000);
+    const minutes = Math.floor((ms % 3600000) / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
 
     return `${days}d ${hours}h ${minutes}m ${seconds}s`;
 }
@@ -70,5 +68,5 @@ function clockString(ms) {
 // Command information
 handler.help = ['runtime'];
 handler.tags = ['main'];
-handler.command = ['runtime', 'uptime'];
+handler.command = /^(runtime|uptime)$/i;
 export default handler;
