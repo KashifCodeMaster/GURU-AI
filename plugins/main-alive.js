@@ -3,8 +3,8 @@ let handler = async (m, { conn }) => {
     let name = "Silver Fox";
 
     let days = Math.floor(uptime / 86400);
-    let hours = Math.floor(uptime / 3600) % 24;
-    let minutes = Math.floor(uptime / 60) % 60;
+    let hours = Math.floor((uptime % 86400) / 3600);
+    let minutes = Math.floor((uptime % 3600) / 60);
 
     let greetings = [
         `Greetings, @${m.sender.split('@')[0]}! 🐶`,
@@ -27,11 +27,11 @@ I'm delighted to confirm that I am alive, well, and at your service. 🤖
 Your interaction keeps my circuits buzzing with joy! 😁
 `;
 
-    m.react('🦊');
+    // React with an emoji
+    await m.react('🦊');
 
-    conn.sendMessage(m.chat, {
-        text: message,
-        quoted: m.quoted,
+    // Send message directly quoting the user's original message
+    await m.reply(message, null, {
         contextInfo: {
             mentionedJid: [m.sender],
             isForwarded: true,
