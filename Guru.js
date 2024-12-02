@@ -429,18 +429,18 @@ global.reloadHandler = async function (restatConn) {
     conn.ev.off('creds.update', conn.credsUpdate)
   }
 
-  conn.welcome = ` Hello @user!\n\n🎉 *WELCOME* to the group @group!\n\n📜 Please read the *DESCRIPTION* @desc.`
-  conn.bye = `👋GOODBYE @user \n\nSee you later!`
-  conn.spromote = `*@user* has been promoted to an admin!`
-  conn.sdemote = `*@user* is no longer an admin.`
-  conn.sDesc = `The group description has been updated to:\n@desc`
-  conn.sSubject = `The group title has been changed to:\n@group`
-  conn.sIcon = `The group icon has been updated!`
-  conn.sRevoke = ` The group link has been changed to:\n@revoke`
-  conn.sAnnounceOn = `The group is now *CLOSED*!\nOnly admins can send messages.`
-  conn.sAnnounceOff = `The group is now *OPEN*!\nAll participants can send messages.`
-  conn.sRestrictOn = `Edit Group Info has been restricted to admins only!`
-  conn.sRestrictOff = `Edit Group Info is now available to all participants!`
+conn.welcome = `Oh look, @user showed up. 🎉\n\nWelcome to @group, where the fun never ends (or maybe it does, who knows). Try not to break anything while you're here. 😉`
+conn.bye = `👋 *Poof!* @user has vanished.\n\nSee you... or not. We won’t miss you, but hey, good luck out there!`
+conn.spromote = `Hold your applause, people. 👏 @user just got promoted to admin! Let’s see how long they last before they mess things up.`
+conn.sdemote = `Well, well, well... @user is no longer an admin. Guess they couldn’t handle the power. 🙄`
+conn.sDesc = `Breaking News: The group description has been updated. 🎤\n...Not that it matters, but hey.`
+conn.sSubject = `Who’s changing things around here? 😤\n*Breaking:* The group name has been changed to @group.\nBrace yourselves, it’s different now.`
+conn.sIcon = `The group icon has been updated!✨\nIs it better? Who knows. But at least it’s new, so that’s something.`
+conn.sRevoke = `The group link just got a makeover! 😎\nHere’s the new one: @revoke\nBetter hurry before it gets revoked again.`
+conn.sAnnounceOn = `The group is now *CLOSED* for business. 🔒\nOnly the elite (admins) can speak. The rest of you? Silence.`
+conn.sAnnounceOff = `The group is now *OPEN* for all! 🚪\nEveryone can yap to their heart's content. Hope you're ready for chaos.`
+conn.sRestrictOn = `Group info is now a *no-go zone* for everyone except admins. 👑\nYou can’t touch a thing. Deal with it.`
+conn.sRestrictOff = `Group info is now free for all to edit. 🌐\nGo wild, everyone! It’s a free-for-all. Just don’t break it.`
 
   conn.handler = handler.handler.bind(global.conn)
   conn.pollUpdate = handler.pollUpdate.bind(global.conn)
