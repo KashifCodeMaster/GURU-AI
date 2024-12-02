@@ -27,6 +27,6 @@ handler.help = ['setbye <text>'];
 handler.tags = ['group'];
 handler.command = ['setbye'];
 handler.admin = true; // Only group admins can use this command
-handler.owner = false; // No special permissions for group owners
+handler.owner = false; // No special permissions for bot owners
 
 export default handler;
