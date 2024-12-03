@@ -621,13 +621,28 @@ export async function participantsUpdate({
                   )}`;
           
                   try {
-if (chat.welcome) {
-  let groupMetadata = await this.groupMetadata(id) || (conn.chats[id] || {}).metadata;
-
-  // Welcome Message
-  for (let user of participants) {
-    let text = (chat.sWelcome || this.welcome || conn.welcome || 'Oh look, @user just joined. Lucky us.')
-
+                    let leaveResponse = await fetch(leaveApiUrl);
+                    let leaveBuffer = await leaveResponse.buffer();
+          
+                    this.sendMessage(id, {
+                        text: text,
+                        contextInfo: {
+                        mentionedJid: [user],
+                        externalAdReply: {
+                        title: "Silver Fox",
+                        body: "Goodbye from  Group",
+                        thumbnailUrl: leaveApiUrl,
+                        sourceUrl: 'https://chat.whatsapp.com/BFfD1C0mTDDDfVdKPkxRAB',
+                        mediaType: 1,
+                        renderLargerThumbnail: false
+                        }}})
+                  } catch (error) {
+                    console.error(`Error generating leave image: ${error}`);
+                  }
+                }
+              }
+            }
+            break;
             case "promote":
                 const promoteText = (chat.sPromote || this.spromote || conn.spromote || `${emoji.promote} @user *is now admin*`).replace("@user", "@" + participants[0].split("@")[0]);
                 
@@ -640,53 +655,7 @@ if (chat.welcome) {
                 break;
             case "demote":
                 const demoteText = (chat.sDemote || this.sdemote || conn.sdemote || `${emoji.demote} @user *demoted from admin*`).replace("@user", "@" + participants[0].split("@")[0]);
-  if (chat.welcome) {
-  let groupMetadata = await this.groupMetadata(id) || (conn.chats[id] || {}).metadata;
-
-  // Welcome Message
-  for (let user of participants) {
-    let text = (chat.sWelcome || this.welcome || conn.welcome || 'Oh look, @user just joined. Lucky us.')
-      .replace('@user', '@' + user.split('@')[0]);
-
-    let nthMember = groupMetadata.participants.length;
-    let secondText = `Welcome, the ${nthMember}th member! Hope you brought snacks... or something useful.`;
-
-    try {
-      // Send the welcome message
-      this.sendMessage(id, {
-        text: `${text} ${secondText}`,
-        contextInfo: {
-          mentionedJid: [user]
-        }
-      });
-    } catch (error) {
-      console.error(`Error sending welcome message: ${error}`);
-    }
-  }
-
-  // Goodbye Message
-  for (let user of participants) {
-    let text = (chat.sBye || this.bye || conn.bye || 'Goodbye, @user. Don’t let the door hit you on the way out.')
-      .replace('@user', '@' + user.split('@')[0]);
-
-    let nthMember = groupMetadata.participants.length;
-    let secondText = `You were our ${nthMember}th victim, I mean, member. Bye-bye, and good luck out there!`;
-
-    try {
-      // Send the goodbye message
-      this.sendMessage(id, {
-        text: `${text} ${secondText}`,
-        contextInfo: {
-          mentionedJid: [user]
-        }
-      });
-    } catch (error) {
-      console.error(`Error sending farewell message: ${error}`);
-    }
-  }
-}
-break;
-      
+                
                 if (chat.detect) {
                     this.sendMessage(id, {
                         text: demoteText.trim(),
