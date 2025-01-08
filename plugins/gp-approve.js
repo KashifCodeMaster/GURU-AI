@@ -5,6 +5,18 @@ let handler = async (m, { conn, command }) => {
 
         const groupId = m.chat; // Get the group ID from the message
 
+        // Fetch the group metadata to check the current member count
+        const groupMetadata = await conn.groupMetadata(groupId);
+        const currentMemberCount = groupMetadata.participants.length;
+
+        console.log(`Current member count: ${currentMemberCount}`);
+
+        // Check if the group is full
+        if (currentMemberCount >= 1025) {
+            await m.reply('The group is already full with 1025 members! 🚫 No more requests can be approved.');
+            return; // Exit early if the group is full
+        }
+
         // Fetch the list of pending group join requests
         const result = await conn.groupRequestParticipantsList(groupId);
 
@@ -22,6 +34,12 @@ let handler = async (m, { conn, command }) => {
         console.log('Request IDs to approve:', requestIds); // Log the IDs to be approved
 
         for (const jid of requestIds) {
+            // Check again if the group is full before approving each request
+            if (currentMemberCount >= 1025) {
+                await m.reply('Stopped processing further requests as the group is now full. 🚫');
+                break; // Exit the loop if the group is full
+            }
+
             try {
                 const approvalResult = await conn.groupRequestParticipantsUpdate(
                     groupId, // Group ID
@@ -29,12 +47,15 @@ let handler = async (m, { conn, command }) => {
                     'approve' // Approve the request
                 );
                 console.log(`Approved request for ${jid}:`, approvalResult); // Log approval result
+
+                // Update the member count after approval
+                currentMemberCount++;
             } catch (error) {
                 console.error(`Failed to approve ${jid}:`, error); // Log any errors for individual approvals
             }
         }
 
-        // Send a success message after all requests are approved
+        // Send a success message after processing requests
         await m.reply(`Approved ${requestIds.length} requests! 🎉 Welcome aboard, you wonderful humans! 🎉`);
         await m.react('✅'); // React with a thumbs-up emoji after approval
     } catch (err) {
