@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import ytdl from 'youtubedl-core';
+import play from "play-dl"; // Alternative to youtubedl-core
 import yts from 'youtube-yts';
 import fs from 'fs';
 import { pipeline } from 'stream';
@@ -26,7 +26,6 @@ const handler = async (m, { conn, command, text, args, usedPrefix }) => {
     await m.react('🔍');
     let searchMsg = await conn.sendMessage(m.chat, { text: "🎵 Searching for the perfect vibes... Hold tight!" }, { quoted: m });
 
-    // Message editing function
     const updateSearchMessage = async (newText) => {
         await conn.relayMessage(m.chat, {
             protocolMessage: {
@@ -37,7 +36,6 @@ const handler = async (m, { conn, command, text, args, usedPrefix }) => {
         }, {});
     };
 
-    // Sequence of search updates with proper delays
     setTimeout(() => updateSearchMessage("🔎 Still hunting down the best tracks for you..."), 3000);
     setTimeout(() => updateSearchMessage("🎧 Almost there! Just a moment more..."), 6000);
 
@@ -52,7 +50,7 @@ const handler = async (m, { conn, command, text, args, usedPrefix }) => {
     const orderedLinks = result.allLinks.map((link, index) => `*${index + 1}.* ${link.title}`).join("\n\n");
     const fullText = `${infoText}\n${orderedLinks}`;
 
-    setTimeout(() => updateSearchMessage(fullText), 9000); // Shows options list after prior messages
+    setTimeout(() => updateSearchMessage(fullText), 9000);
 
     const timeoutId = setTimeout(() => {
         delete conn.MUSICPLAYER[sender];
@@ -63,15 +61,15 @@ const handler = async (m, { conn, command, text, args, usedPrefix }) => {
                 editedMessage: { conversation: "🕰️ Options timed out! Request again if you need more tunes 🎶" }
             }
         }, {});
-    }, 45000); // Auto-delete after 45 seconds
+    }, 45000);
 
     conn.MUSICPLAYER[sender] = {
         result,
         key: searchMsg.key,
-        timeoutId  // Store timeout ID for cancellation if an option is selected
+        timeoutId
     };
 
-    lastPlayTime = Date.now(); // Set global cooldown time
+    lastPlayTime = Date.now();
 };
 
 handler.before = async (m, { conn }) => {
@@ -89,7 +87,7 @@ handler.before = async (m, { conn }) => {
         return;
     }
 
-    clearTimeout(timeoutId); // Cancel the timeout if a valid choice is made
+    clearTimeout(timeoutId);
     await m.react('⏳');
     await conn.relayMessage(m.chat, {
         protocolMessage: {
@@ -100,11 +98,12 @@ handler.before = async (m, { conn }) => {
     }, {});
 
     const selectedUrl = result.allLinks[choice - 1].url;
-    const thumbnailUrl = result.allLinks[choice - 1].thumbnail; // Get thumbnail URL
+    const thumbnailUrl = result.allLinks[choice - 1].thumbnail;
     const title = generateRandomName();
-    const audioStream = ytdl(selectedUrl, { filter: 'audioonly', quality: 'highestaudio' });
     const tmpDir = os.tmpdir();
     const filePath = `${tmpDir}/${title}.mp3`;
+
+    const audioStream = await play.stream(selectedUrl);
     const writableStream = fs.createWriteStream(filePath);
 
     const downloadProgressUpdates = async () => {
@@ -124,15 +123,14 @@ handler.before = async (m, { conn }) => {
         }, {});
     };
 
-    // Start download and simulate progress updates
-    downloadProgressUpdates(); // Start progress updates
-    await streamPipeline(audioStream, writableStream); // Complete the download
+    downloadProgressUpdates();
+    await streamPipeline(audioStream.stream, writableStream);
 
     const doc = {
         audio: { url: filePath },
         mimetype: 'audio/mpeg',
         fileName: `${title}`,
-        jpegThumbnail: await fetchThumbnail(thumbnailUrl) // Set thumbnail
+        jpegThumbnail: await fetchThumbnail(thumbnailUrl)
     };
 
     await conn.sendMessage(m.chat, doc, { quoted: m });
@@ -191,4 +189,3 @@ async function fetchThumbnail(url) {
         return null;
     }
 }
-    
