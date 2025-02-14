@@ -1,14 +1,46 @@
 import fetch from 'node-fetch';
+import fs from 'fs';
 
-let lastPollHour = null;  // Track the last hour a poll was sent
+const pollHour = 12; // Set the hour (24-hour format) for the poll to be sent
+const lastPollFile = 'lastPollDate.txt';
 
-// Predefined poll hours (24-hour format)
-const pollHours = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
+const groupJids = [
+    '120363099626473994@g.us',  // Hotline group JID
+    '120363331922046554@g.us'   // Additional group JID
+];
+
+// Function to get the last poll date from file
+function getLastPollDate() {
+    try {
+        if (fs.existsSync(lastPollFile)) {
+            return fs.readFileSync(lastPollFile, 'utf8').trim();
+        }
+    } catch (err) {
+        console.error('Error reading last poll date file:', err);
+    }
+    return null;
+}
+
+// Function to update the last poll date in file
+function setLastPollDate(date) {
+    try {
+        fs.writeFileSync(lastPollFile, date, 'utf8');
+    } catch (err) {
+        console.error('Error writing last poll date file:', err);
+    }
+}
 
 // Function to send the Would You Rather poll
 async function sendWyrPoll(conn) {
     try {
-        const groupJid = '120363099626473994@g.us';  // Hotline group JID
+        const now = new Date();
+        const today = now.toDateString();
+        const lastPollDate = getLastPollDate();
+        
+        if (lastPollDate === today) {
+            console.log('Poll already sent today. Skipping...');
+            return;
+        }
 
         // Fetch poll options from the API
         const res = await fetch('https://api.popcat.xyz/wyr');
@@ -25,36 +57,32 @@ async function sendWyrPoll(conn) {
             selectableCount: 1,
         };
 
-        // Send the poll to the specific group (Hotline)
-        await conn.sendMessage(groupJid, { poll: pollMessage });
-        console.log('Poll sent successfully at the correct time.');
+        // Send the poll to all specified groups
+        for (const groupJid of groupJids) {
+            await conn.sendMessage(groupJid, { poll: pollMessage });
+            console.log(`Poll sent successfully to ${groupJid}`);
+        }
 
-        // Update the last poll hour to the current hour
-        const now = new Date();
-        lastPollHour = now.getHours();
-
+        // Update the last poll date
+        setLastPollDate(today);
     } catch (err) {
-        console.error('Failed to send hourly poll:', err);
+        console.error('Failed to send daily poll:', err);
     }
 }
 
 // Function to check if it's the correct time to send a poll
 function checkTimeForPoll(conn) {
     const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-
-    // Check if the current hour is in the pollHours list and no poll has been sent this hour
-    if (pollHours.includes(currentHour) && currentMinute === 0 && currentHour !== lastPollHour) {
-        sendWyrPoll(conn);  // Send poll at the start of the hour if not already sent
+    if (now.getHours() === pollHour && getLastPollDate() !== now.toDateString()) {
+        sendWyrPoll(conn);
     }
 }
 
 // Set a recurring check every minute to see if it's time to send the poll
-function schedulePredefinedPolls(conn) {
+function scheduleDailyPolls(conn) {
     setInterval(() => {
-        checkTimeForPoll(conn);  // Check the time every minute
-    }, 60 * 1000);  // 1 minute in milliseconds
+        checkTimeForPoll(conn);
+    }, 60 * 1000); // Check every minute
 }
 
 // Export the manual handler for WYR command
@@ -80,7 +108,6 @@ let handler = async (m, { conn }) => {
         // Send the poll
         await conn.sendMessage(m.chat, { poll: pollMessage });
         await m.react('🗳️');  // React with poll emoji after sending the poll
-
     } catch (err) {
         console.error(err);
         throw 'Something went wrong with the poll, please try again!';
@@ -89,9 +116,9 @@ let handler = async (m, { conn }) => {
 
 handler.help = ['wouldyourather'];
 handler.tags = ['fun'];
-handler.command = /^wyr$/i;
+handler.command = /^wyr$|^wouldyourather$/i;
 
 export default handler;
 
 // Ensure to schedule the automatic poll when the bot starts
-schedulePredefinedPolls(conn);  // Ensure conn is properly defined in your context
+scheduleDailyPolls(conn);
