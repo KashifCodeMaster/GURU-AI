@@ -14,18 +14,14 @@ let handler = async (m, { text, conn, usedPrefix, command }) => {
         let { definition, example, thumbs_up, thumbs_down, author } = json.list[0];
 
         let message = `
-📖 *Urban Dictionary*
-──────────────
-🧬 *Word:* *${text}*
+🧬 *Word:* `${text}`
 📌 *Definition:*  
 _${definition.replace(/\[|\]/g, '')}_  
 
 📝 *Example:*  
 "${example.replace(/\[|\]/g, '')}"  
 
-👍 *Upvotes:* ${thumbs_up}   👎 *Downvotes:* ${thumbs_down}  
-✍️ *Defined by:* ${author}  
-──────────────
+👍 ${thumbs_up}   👎 ${thumbs_down}  
 `.trim();
 
         m.reply(message);
