@@ -14,7 +14,7 @@ let handler = async (m, { text, conn, usedPrefix, command }) => {
         let { definition, example, thumbs_up, thumbs_down, author } = json.list[0];
 
         let message = `
-🧬 *Word:* `${text}`
+🧬 *Word:* \`${text}\`
 📌 *Definition:*  
 _${definition.replace(/\[|\]/g, '')}_  
 
@@ -31,7 +31,7 @@ _${definition.replace(/\[|\]/g, '')}_
 };
 
 handler.help = ['define'];
-handler.tags = ['tools'];
+handler.tags = ['fun'];
 handler.command = ['define'];
 
 export default handler;
