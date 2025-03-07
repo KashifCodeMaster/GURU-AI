@@ -17,14 +17,14 @@ let handler = async (m, { conn, command, usedPrefix }) => {
 
     let caption = `
 🌍 *GUESS THE FLAG CHALLENGE* 🚩  
-──────────────────────────  
+──────────────────────  
 ⏳ *Time Limit:* ${(timeout / 1000).toFixed(2)} seconds  
 💡 *Need a hint?* Use: *${usedPrefix}fhint*  
-🎁 *Reward:* ${rewardXP} XP  
+🎁 *Reward:* ${reward} XP  
 🧠 *HOW TO ANSWER:* Simply type the *correct country name* in the chat!  
 
 ⚠️ *If you surrender like the weak human you are, type:* *surrender*
-──────────────────────────  
+──────────────────────  
 
 ⌛ *Think fast, human. If your brain can handle it...*
 `.trim();
