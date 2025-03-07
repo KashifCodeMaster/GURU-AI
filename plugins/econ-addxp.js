@@ -1,31 +1,33 @@
-//import db from '../lib/database.js'
-
 let handler = async (m, { conn, text }) => {
-  let who
-  if (m.isGroup) who = m.mentionedJid[0]
-  else who = m.chat
-  if (!who) throw '✳️ Tag the user'
-  let txt = text.replace('@' + who.split`@`[0], '').trim()
-  if (!txt) throw '✳️ Enter the amount of *XP* you want to add'
-  if (isNaN(txt)) throw ' 🔢 only numbers'
-  let xp = parseInt(txt)
-  let exp = xp
-  
-  if (exp < 1) throw '✳️ Mínimum *1*'
-  let users = global.db.data.users
-  users[who].exp += xp
+  let who = m.isGroup ? m.mentionedJid[0] : m.chat;
+  if (!who) throw '✳️ Tag a user, unless you’re trying to give XP to thin air.';
 
-  await m.reply(`≡ *XP ADDED*
-┌──────────────
-▢  *Total:* ${xp}
-└──────────────`)
- conn.fakeReply(m.chat, `▢ Did you recieve \n\n *+${xp} XP*`, who, m.text)
-}
+  let txt = text.replace('@' + who.split`@`[0], '').trim();
+  if (!txt) throw '✳️ Enter how much *XP* you want to add. Or should I just guess?';
 
-handler.help = ['addxp <@user>']
-handler.tags = ['economy']
-handler.command = ['addxp'] 
-handler.rowner = true
+  if (isNaN(txt)) throw '🔢 I said numbers, not your hopes and dreams.';
+  let xp = parseInt(txt);
+  if (xp < 1) throw '✳️ The minimum is *1* XP. Even your bad decisions aren’t that low.';
 
-export default handler
+  let users = global.db.data.users;
+  users[who].exp += xp;
 
+  await m.reply(
+    `✅ *XP Successfully Added!*  
+    ───────────────  
+    👤 *User:* @${who.split`@`[0]}  
+    🔼 *XP Gained:* ${xp}  
+    📊 *New Total:* ${users[who].exp} XP  
+    ───────────────  
+    Now go forth and waste it on something equally pointless.`
+  );
+
+  conn.fakeReply(m.chat, `⚡ *Boom!* You just got *+${xp} XP!* Use it wisely. Or don’t.`, who, m.text);
+};
+
+handler.help = ['addxp <@user> <amount>'];
+handler.tags = ['economy'];
+handler.command = ['addxp'];
+handler.rowner = true;
+
+export default handler;
