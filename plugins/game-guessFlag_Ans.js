@@ -4,63 +4,52 @@ const threshold = 0.72;
 
 export async function before(m) {
     let id = m.chat;
+    if (!m.quoted) return true; // Ignore messages that aren’t replies
+    if (!(id in this.tebakbendera)) return true; // Ignore if no active game
+    if (m.quoted.id !== this.tebakbendera[id][0].id) return true; // Ignore if the reply isn’t to the game message
 
-    // Check if there's an active game in this chat
-    if (!this.tebakbendera || !(id in this.tebakbendera)) return;
+    let json = this.tebakbendera[id][1];
+    let userAnswer = m.text.trim().toLowerCase();
+    let correctAnswer = json.name.toLowerCase().trim();
 
-    let game = this.tebakbendera[id];
-    let json = game[1];
-
-    // Ensure message is relevant to the game
-    if (!m.text || !json.name) return;
-
-    let answer = json.name.toLowerCase().trim();
-    let userAnswer = m.text.toLowerCase().trim();
-
-    // Check if user surrendered
-    if (/^(me)?nyerah|surr?ender$/i.test(userAnswer)) {
-        clearTimeout(game[3]);
+    // **If they surrender, let them embrace their shame**
+    if (/^((me)?nyerah|surr?ender)$/i.test(userAnswer)) {
+        clearTimeout(this.tebakbendera[id][3]);
         delete this.tebakbendera[id];
-        return this.reply(
-            m.chat, 
-            `😆 *Pathetic!*  
-So, you finally admit your inferior brain couldn't handle it?  
-📢 *The correct answer was:* *${json.name}*  
-Better luck next time, human... or should I say, lower life form.`,
-            m
-        );
+        return this.reply(m.chat, `😆 *You surrendered? Pathetic!*  
+🔎 *The correct answer was:* *${json.name}*  
+🎭 *I expected nothing less from someone with your level of intelligence.*`, m);
     }
 
-    // Check if the answer is correct
-    if (userAnswer === answer) {
-        global.db.data.users[m.sender].exp += game[2]; // Give XP reward
-        this.reply(
-            m.chat, 
-            `🎉 *UNBELIEVABLE!*  
-Did you actually manage to get it right, or was that just a lucky guess?  
-✅ *Correct Answer:* *${json.name}*  
-🎁 *You somehow earned:* ${game[2]} XP  
-Maybe there’s hope for your species after all… but I doubt it.`,
-            m
-        );
-        clearTimeout(game[3]);
+    // **Check if the answer is correct**
+    if (userAnswer === correctAnswer) {
+        if (!global.db.data.users[m.sender]) global.db.data.users[m.sender] = { exp: 0 };
+        global.db.data.users[m.sender].exp += this.tebakbendera[id][2];
+
+        this.reply(m.chat, `🎉 *Congratulations, you non-disappointing creature!*  
+✅ *The correct answer is:* *${json.name}*  
+🎁 *XP Earned:* +${this.tebakbendera[id][2]}  
+🧠 *Perhaps there is hope for your species after all... but I wouldn’t bet on it.*`, m);
+        
+        clearTimeout(this.tebakbendera[id][3]);
         delete this.tebakbendera[id];
-    } else if (similarity(userAnswer, answer) >= threshold) {
-        m.reply(
-            `⚠️ *Almost... but not quite!*  
-You're so close, yet so far. Come on, use that tiny brain of yours!  
-Try again before time runs out.`
-        );
-    } else {
-        this.reply(
-            m.chat, 
-            `❌ *WRONG!*  
-Oh dear, another incorrect answer. I expected nothing more from a human like you.  
-Are you even *trying*, or just smashing your keyboard in despair?  
-Think harder—or don't. Your failure amuses me.`,
-            m
-        );
+    } 
+    // **Check if the answer is close but slightly incorrect**
+    else if (similarity(userAnswer, correctAnswer) >= threshold) {
+        m.reply(`⚠️ *Oh, you were *so* close!*  
+🔍 *Did your last two brain cells fail you at the last second? Check your spelling and try again!*`);
+    } 
+    // **Handle incorrect answers, but prevent spam**
+    else {
+        if (!this.tebakbendera[id].wrongAnswers) this.tebakbendera[id].wrongAnswers = new Set();
+        if (this.tebakbendera[id].wrongAnswers.has(userAnswer)) return true; // Ignore repeat wrong answers  
+
+        this.tebakbendera[id].wrongAnswers.add(userAnswer);
+        this.reply(m.chat, `❌ *Wrong, wrong, wrong!*  
+🙄 *Are you even trying, or are you just pressing random keys like a confused monkey?*`, m);
     }
+
+    return true;
 }
 
 export const exp = 0;
