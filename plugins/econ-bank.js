@@ -32,17 +32,17 @@ let handler = async (m, { conn, usedPrefix }) => {
         m.chat,
         `🏦 *The Grand Financial Report of ${username}*  
 
-━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━
 💰 *Total Bank Balance:* _${bankBalance.toLocaleString()} Gold_  
 📊 *Wealth Status:* ${wealthStatus}  
-━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━
 
 📢 *Breaking News:*  
 - *@${username}* has just checked their bank balance.  
 - Authorities confirm they are officially *${wealthStatus.split(" ")[1]}!*  
 - Experts suggest either *investing wisely* or *considering a job (if applicable).*  
 - The stock market remains unaffected.  
-━━━━━━━━━━━━━━━━━━━  
+━━━━━━━━━━━━━━  
 
 ⚠️ *Disclaimer:* If this financial situation causes emotional distress, please consult a rich friend for donations.  
 
