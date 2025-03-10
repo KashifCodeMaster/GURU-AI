@@ -1,17 +1,5 @@
-import {
-  promises,
-  readFileSync
-} from "fs";
-import {
-  join
-} from "path";
-import {
-  xpRange
-} from "../lib/levelling.js";
 import moment from "moment-timezone";
-import os from "os";
 import fs from "fs";
-import fetch from "node-fetch";
 
 const defaultMenu = {
   before: `
@@ -36,171 +24,548 @@ const defaultMenu = {
   💾 *Database:*  %totalreg
   ╰──────────⳹
 
+  ┏━༻ *ROBOT DETAILS* ༺━┓
+  🔋 *Power Source:* High-Density Lithium Cells  
+  ⚙️ *Core System:* Multi-Function Automation Unit  
+  📡 *Connectivity:* Secure Encrypted Network   
+  🤖 *Adaptive Learning:* Auto-Task Optimization  
+  🎛️ *Control System:* Remote & Autonomous Modes  
+  🔄 *Maintenance Cycle:* Auto-Diagnostics Every 24H  
+  ⚡ *Processing Unit:* Multi-Core Neural Processor    
+  ╰──────────⳹
+
   ┏༻ *COMMAND CENTER* ༺┓
   │ *%totalfeatures* Commands
   ╰──────────⳹
   %readmore
+  
+  ┏━❀•🎀 *GROUP* 🎀•❀━┓
+◈ .getbio <@tag/reply>  Ⓛ
+◈ .Setdesc <text>
+◈ .setname <text>
+◈ .add
+◈ .approve
+◈ .accept
+◈ .delete
+◈ .delwarn @user
+◈ .unwarn @user
+◈ .demote (@tag)
+◈ .infogp
+◈ .hidetag
+◈ .invite <917xxx>
+◈ .kick @user
+◈ .kickcountry <country code>
+◈ .link
+◈ .poll question|option1|option2
+◈ .profile
+◈ .promote
+◈ .resetlink
+◈ .setbye <text>
+◈ .group *open/close*
+◈ .setwelcome <text>
+◈ .simulate <event> @user
+◈ .admins hello
+◈ .tagadmins
+◈ .admin
+◈ .tagall
+◈ .totag
+◈ .warn @user
+◈ .warns
+◈ .main
+╚══•❅•°•❈•°•❅•══╝
+  ‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎‎
+┏━❀•🎀 *FUN* 🎀•❀━┓
+◈ .define <word>
+◈ .afk <reason>
+◈ .animequote
+◈ .simpcard
+◈ .itssostupid
+◈ .iss
+◈ .stupid
+◈ .tweet <comment>
+◈ .lolicon
+◈ .ytcomment <comment>
+◈ .tomp3
+◈ .toav
+◈ .robot
+◈ .character @tag
+◈ .countdown <normal|fast> <number>
+◈ .dare
+◈ .flirt
+◈ .gay @user
+◈ .hack @tag
+◈ .hack group
+◈ .pickupline
+◈ .question
+◈ .shayari
+◈ .ship
+◈ .yomamajoke
+◈ .truth
+◈ .waste @user
+◈ .wouldyourather
+◈ .image
+◈ .meme
+◈ .quote
+╚══•❅•°•❈•°•❅•══╝
+
+┏━❀•🎀 *TOOLS* 🎀•❀━┓
+◈ .checkwa
+◈ .qrcodegen <text>
+◈ .fancy <key> <text>
+◈ .weather *<place>*
+◈ .dehaze
+◈ .recolor
+◈ .hdr
+◈ .length <amount>
+◈ .tinyurl <link>
+◈ .shorten <link>
+◈ .tempmail
+◈ .shazam
+◈ .cal <equation>
+◈ ..carbon <code>
+◈ .define <word>
+◈ .element
+◈ .itunes
+◈ .lyrics
+◈ .imdb
+◈ .ocr
+◈ .course
+◈ .randomcourse
+◈ .readmore <text1>|<text2>
+◈ .readvo
+◈ .removebg
+◈ .ss <url>
+◈ .ssf <url>
+◈ .subreddit
+◈ .tourl
+◈ .translate <lang> <text>
+◈ .true
+◈ .tts <lang> <task>
+◈ .wa
+╚══•❅•°•❈•°•❅•══╝
+
+┏━❀•🎀 *GAME* 🎀•❀━┓
+◈ .slot <amount>
+◈ .chess [from to]
+◈ .chess delete
+◈ .chess join
+◈ .chess start
+◈ .delttt
+◈ .guessflag
+◈ .Maths <modes>
+◈ .ppt <rock/paper/scissors>
+◈ .tictactoe <room name>
+◈ .ttt <room name>
+╚══•❅•°•❈•°•❅•══╝
+
+┏━❀•🎀 *ANIME* 🎀•❀━┓
+◈ .anime
+◈ .akira
+◈ .akiyama
+◈ .anna
+◈ .asuna
+◈ .ayuzawa
+◈ .boruto
+◈ .chiho
+◈ .chitoge
+◈ .deidara
+◈ .erza
+◈ .elaina
+◈ .eba
+◈ .emilia
+◈ .hestia
+◈ .hinata
+◈ .inori
+◈ .isuzu
+◈ .itachi
+◈ .itori
+◈ .kaga
+◈ .kagura
+◈ .kaori
+◈ .keneki
+◈ .kotori
+◈ .kurumi
+◈ .madara
+◈ .mikasa
+◈ .miku
+◈ .minato
+◈ .naruto
+◈ .nezuko
+◈ .sagiri
+◈ .sasuke
+◈ .sakura
+◈ .manhwa
+◈ .waifu
+◈ .neko
+◈ .zerotwo
+◈ .loli
+◈ .animequote
+◈ .pokedex <pokemon>
+◈ .trace
+╚══•❅•°•❈•°•❅•══╝
+
+┏━❀•🎀 *DOWNLOADER* 🎀•❀━┓
+◈ .gitclone <url>
+◈ .instagram
+◈ .mega
+◈ .modapk
+◈ .play  Ⓛ
+◈ .spotify
+◈ .ytsearch
+◈ .ytmp4 <yt-link>
+◈ .wallpaper <query>
+╚══•❅•°•❈•°•❅•══╝
+
+┏━❀•🎀 *ECONOMY* 🎀•❀━┓
+◈ .addgold <@user>
+◈ .addxp <@user>
+◈ .bank
+◈ .buych
+◈ .cock-fight <amount>
+◈ .buy
+◈ .buyall
+◈ .daily
+◈ .deposit
+◈ .gamble <amount> <color(red/black)>
+◈ .give credit [amount] [@tag]
+◈ .levelup
+◈ .rob
+◈ .roulette <amount> <color(red/black)>
+◈ .wallet
+◈ .withdraw
+◈ .work
+╚══•❅•°•❈•°•❅•══╝
+
+┏━❀•🎀 *CORE* 🎀•❀━┓
+◈ .leaderboard
+╚══•❅•°•❈•°•❅•══╝
+
+┏━❀•🎀 *RELIGION* 🎀•❀━┓
+◈ .bible [chapter_number|chapter_name]
+◈ .gita [verse_number]
+◈ .quran [number|name]
+╚══•❅•°•❈•°•❅•══╝
+
+┏━❀•🎀 *IMAGE* 🎀•❀━┓
+◈ .blackpink
+◈ .messi
+◈ .cristianoronaldo
+◈ .cr7
+◈ .ppcouple
+◈ .ppcp
+╚══•❅•°•❈•°•❅•══╝
+
+┏━❀•🎀 *SEARCH* 🎀•❀━┓
+◈ .wiki
+╚══•❅•°•❈•°•❅•══╝
+
+┏━❀•🎀 *REACTION* 🎀•❀━┓
+◈ .bully @tag
+◈ .cuddle @tag
+◈ .cry @tag
+◈ .hug @tag
+◈ .awoo @tag
+◈ .kiss @tag
+◈ .lick @tag
+◈ .pat @tag
+◈ .smug @tag
+◈ .bonk @tag
+◈ .yeet @tag
+◈ .blush @tag
+◈ .smile @tag
+◈ .wave @tag
+◈ .highfive @tag
+◈ .handhold @tag
+◈ .nom @tag
+◈ .bite @tag
+◈ .glomp @tag
+◈ .slap @tag
+◈ .kill @tag
+◈ .happy @tag
+◈ .wink @tag
+◈ .poke @tag
+◈ .dance @tag
+◈ .cringe @tag
+◈ .scream @tag
+◈ .pout @tag
+◈ .sigh @tag
+◈ .tease @tag
+╚══•❅•°•❈•°•❅•══╝
+
+┏━❀•🎀 *MAIN* 🎀•❀━┓
+◈ .alive
+◈ .info
+◈ .totalfeature
+◈ .list
+◈ .groupmenu
+◈ .dlmenu
+◈ .downloadermenu
+◈ .economymenu
+◈ .funmenu
+◈ .gamemenu
+◈ .stickermenu
+◈ .nsfwmenu
+◈ .logomenu
+◈ .toolmenu
+◈ .listprem
+◈ .ping
+◈ .runtime
+◈ .server
+◈ .blocklist
+◈ .setprivacy
+╚══•❅•°•❈•°•❅•══╝
+
+┏━❀•🎀 *MAKER* 🎀•❀━┓
+◈ .blur
+◈ .difuminar2
+◈ .hornycard
+◈ .hornylicense
+◈ .gfx1
+◈ .gfx2
+◈ .gfx3
+◈ .gfx4
+◈ .gfx5
+◈ .gfx6
+◈ .gfx7
+◈ .gfx8
+◈ .gfx9
+◈ .gfx10
+◈ .gfx11
+◈ .gfx12
+◈ .simpcard
+◈ .itssostupid
+◈ .iss
+◈ .stupid
+◈ .tweet <comment>
+◈ .lolicon
+◈ .ytcomment <comment>
+╚══•❅•°•❈•°•❅•══╝
+
+┏━❀•🎀 *STICKER* 🎀•❀━┓
+◈ .emojimix <emoji+emoji>
+◈ .smaker
+◈ .stickerwithmeme (caption|reply media)
+◈ .swmeme <url>
+◈ .swm(caption|reply media)
+◈ .sfull
+◈ .toimg <sticker>
+◈ .tovid
+◈ .trigger <@user>
+◈ .ttp
+◈ .ttp2
+◈ .ttp3
+◈ .ttp4
+◈ .ttp5
+◈ .attp
+◈ .attp2
+◈ .attp3
+◈ .take <name>|<author>
+╚══•❅•°•❈•°•❅•══╝
+
+┏━❀•🎀 *AI* 🎀•❀━┓
+◈ .toanime
+◈ .tocartoon
+◈ .hd 🅟
+◈ .hdr 🅟
+◈ .unblur 🅟
+◈ .colorize 🅟
+◈ .colorizer 🅟
+◈ .enhance 🅟
+◈ .enhancer 🅟
+◈ .dehaze 🅟
+◈ .recolor 🅟
+◈ .enhance 🅟
+╚══•❅•°•❈•°•❅•══╝
+
+┏━❀•🎀 *REGISTER* 🎀•❀━┓
+◈ .reg <name.age>
+◈ .mysn
+◈ .unreg <Num Serie>
+╚══•❅•°•❈•°•❅•══╝
+
+┏━❀•🎀 *NSFW* 🎀•❀━┓
+◈ .genshin
+◈ .swimsuit
+◈ .schoolswimsuit
+◈ .white
+◈ .barefoot
+◈ .touhou
+◈ .gamecg
+◈ .hololive
+◈ .uncensored
+◈ .sunglasses
+◈ .glasses
+◈ .weapon
+◈ .shirtlift
+◈ .chain
+◈ .fingering
+◈ .flatchest
+◈ .torncloth
+◈ .bondage
+◈ .demon
+◈ .wet
+◈ .pantypull
+◈ .headdress
+◈ .headphone
+◈ .tie
+◈ .anusview
+◈ .shorts
+◈ .stokings
+◈ .topless
+◈ .beach
+◈ .bunnygirl
+◈ .bunnyear
+◈ .idol
+◈ .vampire
+◈ .gun
+◈ .maid
+◈ .bra
+◈ .nobra
+◈ .bikini
+◈ .whitehair
+◈ .blonde
+◈ .pinkhair
+◈ .bed
+◈ .ponytail
+◈ .nude
+◈ .dress
+◈ .underwear
+◈ .foxgirl
+◈ .uniform
+◈ .skirt
+◈ .sex
+◈ .sex2
+◈ .sex3
+◈ .breast
+◈ .twintail
+◈ .spreadpussy
+◈ .tears
+◈ .seethrough
+◈ .breasthold
+◈ .drunk
+◈ .fateseries
+◈ .spreadlegs
+◈ .openshirt
+◈ .headband
+◈ .food
+◈ .close
+◈ .tree
+◈ .nipples
+◈ .erectnipples
+◈ .horns
+◈ .greenhair
+◈ .wolfgirl
+◈ .catgirl
+◈ .nsfw
+◈ .ass
+◈ .boobs
+◈ .lesbian
+◈ .pussy
+◈ .pack
+╚══•❅•°•❈•°•❅•══╝
+
+┏━❀•🎀 *MAKER* 🎀•❀━┓
+◈ .blur
+◈ .difuminar2
+◈ .hornycard
+◈ .hornylicense
+◈ .gfx1
+◈ .gfx2
+◈ .gfx3
+◈ .gfx4
+◈ .gfx5
+◈ .gfx6
+◈ .gfx7
+◈ .gfx8
+◈ .gfx9
+◈ .gfx10
+◈ .gfx11
+◈ .gfx12
+◈ .simpcard
+◈ .itssostupid
+◈ .iss
+◈ .stupid
+◈ .tweet <comment>
+◈ .lolicon
+◈ .ytcomment <comment>
+╚══•❅•°•❈•°•❅•══╝
+
+┏━❀•🎀 *AUDIO* 🎀•❀━┓
+◈ .bass [vn]
+◈ .blown [vn]
+◈ .deep [vn]
+◈ .earrape [vn]
+◈ .fast [vn]
+◈ .fat [vn]
+◈ .nightcore [vn]
+◈ .reverse [vn]
+◈ .robot [vn]
+◈ .slow [vn]
+◈ .smooth [vn]
+◈ .tupai [vn]
+╚══•❅•°•❈•°•❅•══╝
+
+┏━━༻ *GUIDELINES* ༺━━┓
+⚠️ *I'm a Robot, not a bot.* Calling me "bot" may lead to a ban or removal from the group.  
+🚫 *Do not spam commands.* Excessive use may lead to temporary restrictions.  
+📵 *Do not spam in my DM & do not call me.* Violations will result in an immediate block.  
+📨 *Need Help?* DM me, and I or my support agents will assist you.  
+  🔞 Use 18+ NSFW commands responsibly. If using in a group, ensure it’s allowed by the admins.
+🚫 Respect Group Rules! Misuse may result in removal.
+╰──────────⳹
+
+~ Silver Fox
+  
 `.trimStart(),
-  header: "┏━❀•🎀 *%category* 🎀•❀━┓",
-  body: "◈ %cmd %isPremium %islimit",
-  footer: "╚══•❅•°•❈•°•❅•══╝",
-  after: "\n%me",
 };
 
-let handler = async (m, {
-  conn,
-  usedPrefix: _p,
-  __dirname,
-  args
-}) => {
+let handler = async (m, { conn }) => {
   await conn.sendMessage(m.chat, {
-    react: {
-      text: "⏳",
-      key: m.key,
-    }
+    react: { text: "⏳", key: m.key },
   });
 
-  let tags = {};
-
   try {
-
-    /* Info Menu */
     let glb = global.db.data.users;
-    let usrs = glb[m.sender];
+    let user = glb[m.sender];
     let tag = `@${m.sender.split("@")[0]}`;
     let mode = global.opts["self"] ? "Private" : "Public";
-    let _package = JSON.parse(await promises.readFile(join(__dirname, "../package.json")).catch(_ => ({}))) || {};
-    let {
-      age,
-      exp,
-      limit,
-      level,
-      role,
-      registered,
-      credit
-    } = glb[m.sender];
-    let {
-      min,
-      xp,
-      max
-    } = xpRange(level, global.multiplier);
-    let name = await conn.getName(m.sender);
-    let premium = glb[m.sender].premiumTime;
-    let prems = `${premium > 0 ? "Premium": "Free"}`;
-    let ucpn = `${ucapan()}`;
 
     let _uptime = process.uptime() * 1000;
-    let _muptime;
-    if (process.send) {
-      process.send("uptime");
-      _muptime = await new Promise(resolve => {
-        process.once("message", resolve);
-        setTimeout(resolve, 1000);
-      }) * 1000;
-    }
-    let muptime = clockString(_muptime);
     let uptime = clockString(_uptime);
+    let muptime = uptime;
 
-    let totalfeatures = Object.values(global.plugins).filter((v) => v.help && v.tags).length;
     let totalreg = Object.keys(glb).length;
-    let help = Object.values(global.plugins).filter(plugin => !plugin.disabled).map(plugin => {
-      return {
-        help: Array.isArray(plugin.tags) ? plugin.help : [plugin.help],
-        tags: Array.isArray(plugin.tags) ? plugin.tags : [plugin.tags],
-        prefix: "customPrefix" in plugin,
-        limit: plugin.limit,
-        premium: plugin.premium,
-        enabled: !plugin.disabled,
-      };
-    });
-    for (let plugin of help)
-      if (plugin && "tags" in plugin)
-        for (let tag of plugin.tags)
-          if (!(tag in tags) && tag) tags[tag] = tag;
-    conn.menu = conn.menu ? conn.menu : {};
-    let before = conn.menu.before || defaultMenu.before;
-    let header = conn.menu.header || defaultMenu.header;
-    let body = conn.menu.body || defaultMenu.body;
-    let footer = conn.menu.footer || defaultMenu.footer;
-    let after = conn.menu.after || (conn.user.jid == global.conn.user.jid ? "" : `Powered by [CoolRobot](https://wa.me/${global.conn.user.jid.split`@`[0]})`) + defaultMenu.after;
-    let _text = [
-      before,
-      ...Object.keys(tags).map(tag => {
-        return header.replace(/%category/g, tags[tag].toUpperCase()) + "\n" + [
-          ...help.filter(menu => menu.tags && menu.tags.includes(tag) && menu.help).map(menu => {
-            return menu.help.map(help => {
-              return body.replace(/%cmd/g, menu.prefix ? help : "%_p" + help)
-                .replace(/%islimit/g, menu.limit ? "Ⓛ" : "")
-                .replace(/%isPremium/g, menu.premium ? "🅟" : "")
-                .trim();
-            }).join("\n");
-          }),
-          footer
-        ].join("\n");
-      }),
-      after
-    ].join("\n\n");
-    let text = typeof conn.menu == "string" ? conn.menu : typeof conn.menu == "object" ? _text : "";
+    let name = await conn.getName(m.sender);
+    let ucpn = `${ucapan()}`;
+    let totalfeatures = "XX"; // Placeholder for total commands
+
     let replace = {
       "%": "%",
-      p: _p,
-      uptime,
-      muptime,
-      me: conn.getName(conn.user.jid),
-      npmname: _package.name,
-      npmdesc: _package.description,
-      version: _package.version,
-      exp: exp - min,
-      maxexp: xp,
-      totalexp: exp,
-      xp4levelup: max - exp,
-      github: _package.homepage ? _package.homepage.url || _package.homepage : "[unknown github url]",
       tag,
       ucpn,
-      platform: "Digital Wonderland",
+      name,
+      credit: user.credit,
+      role: user.role,
+      level: user.level,
+      exp: user.exp,
+      maxexp: "XX",
+      totalexp: "XX",
+      xp4levelup: "XX",
       mode,
-      _p,
-      credit,
-      age,
-      tag,
-      name,
-      prems,
-      level,
-      limit,
-      name,
+      muptime,
+      uptime,
       totalreg,
       totalfeatures,
-      role,
       readmore: readMore,
     };
-    text = text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join`|`})`, "g"), (_, name) => "" + replace[name]);
-    const pp = './Assets/Gurulogo.jpg';
 
-    let contact = {
-      key: {
-        fromMe: false,
-        participant: `${m.sender.split`@`[0]}@s.whatsapp.net`,
-        ...(m.chat ? {
-          remoteJid: '0@s.whatsapp.net'
-        } : {})
-      },
-      message: {
-        contactMessage: {
-          displayName: `${name}`,
-          vcard: `BEGIN:VCARD\nVERSION:3.0\nN:;a,;;;\nFN:${name}\nitem1.TEL;waid=${m.sender.split('@')[0]}:${m.sender.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`
-        }
-      }
-    };
+    let text = defaultMenu.before.replace(/%(\w+)/g, (_, name) => replace[name] || "");
+
+    let imageUrl = "https://i.imgur.com/Od18YBm.jpeg";
 
     conn.sendMessage(m.chat, {
-      video: {
-        url: menuvid
-      },
+      image: { url: imageUrl },
       caption: text.trim(),
-      gifPlayback: true,
-      gifAttribution: 0
-    }, {
-      quoted: contact
     });
 
   } catch (e) {
@@ -208,49 +573,24 @@ let handler = async (m, {
     throw e;
   }
 };
+
 handler.command = /^(menu|help|\?)$/i;
-
 export default handler;
-
-function pickRandom(list) {
-  return list[Math.floor(Math.random() * list.length)];
-}
 
 const more = String.fromCharCode(8206);
 const readMore = more.repeat(4001);
 
 function clockString(ms) {
-  let h = isNaN(ms) ? "--" : Math.floor(ms / 3600000);
-  let m = isNaN(ms) ? "--" : Math.floor(ms / 60000) % 60;
-  let s = isNaN(ms) ? "--" : Math.floor(ms / 1000) % 60;
-  return [h, " H ", m, " M ", s, " S "].map(v => v.toString().padStart(2, 0)).join("");
-}
-
-function clockStringP(ms) {
-  let ye = isNaN(ms) ? "--" : Math.floor(ms / 31104000000) % 10;
-  let mo = isNaN(ms) ? "--" : Math.floor(ms / 2592000000) % 12;
-  let d = isNaN(ms) ? "--" : Math.floor(ms / 86400000) % 30;
-  let h = isNaN(ms) ? "--" : Math.floor(ms / 3600000) % 24;
-  let m = isNaN(ms) ? "--" : Math.floor(ms / 60000) % 60;
-  let s = isNaN(ms) ? "--" : Math.floor(ms / 1000) % 60;
-  return [ye, " *Years 🗓️*\n", mo, " *Month 🌙*\n", d, " *Days ☀️*\n", h, " *Hours 🕐*\n", m, " *Minute ⏰*\n", s, " *Second ⏱️*"].map(v => v.toString().padStart(2, 0)).join("");
+  let h = Math.floor(ms / 3600000);
+  let m = Math.floor(ms / 60000) % 60;
+  let s = Math.floor(ms / 1000) % 60;
+  return [h, "H", m, "M", s, "S"].map(v => v.toString().padStart(2, 0)).join(" ");
 }
 
 function ucapan() {
   const time = moment.tz("Asia/Karachi").format("HH");
-  let res = "😄 Good morning!";
-  if (time >= 4) {
-    res = "😎 Good Morning!";
-  }
-  if (time >= 11) {
-    res = "🌞 Good Afternoon!";
-  }
-  if (time >= 15) {
-    res = "🌇 Good Afternoon!";
-  }
-  if (time >= 18) {
-    res = "🌙 Good Night!";
-  }
-  return res;
-        }
-                                    
+  if (time < 4) return "🌙 Good Night!";
+  if (time < 11) return "😎 Good Morning!";
+  if (time < 15) return "🌞 Good Afternoon!";
+  return "🌆 Good Evening!";
+}
