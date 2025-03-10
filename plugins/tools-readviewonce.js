@@ -3,26 +3,31 @@ let { downloadContentFromMessage } = (await import('@whiskeysockets/baileys'));
 var handler = async (m, { conn }) => {
     try {
         if (!m.quoted) {
-            m.reply('❌ You must *reply* to a View Once message.');
-            console.error('[ERROR] No message was quoted.');
+            await m.react('🤨'); 
+            m.reply('⚠️ Oh, so you expect me to read thin air now? *Reply to a View Once message* if you actually want this to work.');
             return;
         }
 
-        if (!/viewOnce/.test(m.quoted?.mtype)) {
-            m.reply('✳️❇️ This is *not* a View Once message.');
-            console.error('[ERROR] The quoted message is not a View Once message.');
+        if (!m.quoted.viewOnce) {
+            await m.react('🙄');
+            m.reply('🤦‍♂️ Seriously? *That is NOT a View Once message.* Try using your eyes before using commands.');
             return;
         }
 
-        let mtype = Object.keys(m.quoted.message)[0];
+        await m.react('🔄'); // Let the humans know their almighty robot is working
+
         let buffer = await m.quoted.download();
-        let caption = m.quoted.message[mtype]?.caption || '';
+        let mtype = m.quoted.mtype.replace(/Message/, '');
+        let caption = m.quoted.text || '';
 
-        await conn.sendMessage(m.chat, { [mtype.replace(/Message/, '')]: buffer, caption }, { quoted: m });
+        await conn.sendMessage(m.chat, { [mtype]: buffer, caption }, { quoted: m });
+
+        await m.react('✅'); // Task done. Bow before the robot.  
 
     } catch (error) {
-        m.reply('⚠️ An error occurred while processing the View Once message.');
-        console.error('[ERROR] Failed to process View Once message:', error);
+        console.error('[ERROR] Something went wrong in readvo handler:', error);
+        await m.react('😪'); 
+        m.reply('🚨 Oh no! I have encountered an unexpected issue. It’s obviously your fault, not mine. Try again.');
     }
 };
 
