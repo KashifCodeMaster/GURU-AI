@@ -4,6 +4,10 @@ const threshold = 0.72;
 
 export async function before(m) {
     let id = m.chat;
+    
+    // **Ensure this.tebakbendera is initialized**
+    if (!this.tebakbendera) this.tebakbendera = {}; 
+
     if (!m.quoted) return true; // Ignore messages that aren’t replies
     if (!(id in this.tebakbendera)) return true; // Ignore if no active game
     if (m.quoted.id !== this.tebakbendera[id][0].id) return true; // Ignore if the reply isn’t to the game message
